@@ -39,13 +39,7 @@ export class FundamentoClient {
   }
 
   async getDocument(npi, format = 'markdown') {
-    const response = await this.axios.get(`/api/v1/documents/${npi}`);
-    const document = response.data;
-
-    if (format === 'json') {
-      return document;
-    }
-
-    return document.content || '';
+    const response = await this.axios.get(`/api/v1/documents/${npi}.${format}`);
+    return response.data;
   }
 }
