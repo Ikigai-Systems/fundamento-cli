@@ -1,0 +1,41 @@
+{
+  "name": "@ikigai-systems/fundamento-cli",
+  "version": "0.1.0",
+  "description": "Command line client for Fundamento Cloud",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "funcli": "./bin/funcli.js"
+  },
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "lint": "eslint src test",
+    "prepublishOnly": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ikigai-Systems/fundamento-cli.git"
+  },
+  "keywords": [
+    "fundamento",
+    "cli",
+    "documentation",
+    "knowledge-management"
+  ],
+  "author": "Ikigai Systems",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "engines": {
+    "node": ">=24.11.1"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "chalk": "^4.1.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
+  }
+}
