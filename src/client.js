@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export class FundamentoClient {
   constructor(config) {
@@ -6,8 +6,8 @@ export class FundamentoClient {
     this.axios = axios.create({
       baseURL: config.baseUrl,
       headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json'
+        "Authorization": `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json"
       }
     });
 
@@ -24,7 +24,7 @@ export class FundamentoClient {
   }
 
   async listSpaces() {
-    const response = await this.axios.get('/api/v1/spaces');
+    const response = await this.axios.get("/api/v1/spaces");
     return response.data;
   }
 
@@ -38,7 +38,7 @@ export class FundamentoClient {
     return response.data;
   }
 
-  async getDocument(npi, format = 'markdown') {
+  async getDocument(npi, format = "markdown") {
     const response = await this.axios.get(`/api/v1/documents/${npi}.${format}`);
     return response.data;
   }
