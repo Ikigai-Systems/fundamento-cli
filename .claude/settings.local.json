@@ -4,7 +4,8 @@
       "Bash(npm install)",
       "Bash(node bin/funcli.js:*)",
       "Bash(npm test)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebSearch"
     ]
   },
   "enabledMcpjsonServers": [
