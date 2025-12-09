@@ -1,56 +1,44 @@
-name: Publish to GitHub Packages
+name: Publish master to GitHub Packages
 
 on:
-  push:
-    branches: [ master ]
+  workflow_run:
+    workflows: [ "Run Tests" ]
+    types:
+      - completed
+    branches:
+      - master
+    tags:
+      - 'v*'
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [24.x]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run linter
-      run: npm run lint
-
-    - name: Run tests
-      run: npm test
-
   publish:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'skipped' }}
+
     permissions:
       contents: read
       packages: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js 24.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: 24.x
-        registry-url: 'https://npm.pkg.github.com'
-        scope: '@ikigai-systems'
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@ikigai-systems"
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Publish to GitHub Packages
-      run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set version from commit SHA
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: npm version --no-git-tag-version "$(jq -r .version package.json)-master.${GITHUB_SHA::7}"
+
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
