@@ -269,6 +269,78 @@ funcli documents create z2zK66AaEF my-document.md
 # Creates "API Documentation" as child of def456
 ```
 
+#### Import documents from directory
+
+```bash
+funcli documents import <space-npi> <directory>
+```
+
+Imports all markdown files from a directory, maintaining the folder hierarchy as nested documents.
+
+**Arguments:**
+- `<space-npi>` - Space NPI where documents will be imported
+- `<directory>` - Path to directory containing markdown files
+
+**Behavior:**
+- Recursively traverses the directory
+- Creates a document for each subdirectory (using directory name as title)
+- Creates a document for each `.md` file (with full content)
+- Maintains parent-child relationships based on folder structure
+- Skips non-markdown files (`.png`, `.jpg`, `.pdf`, etc.)
+- Processes frontmatter in markdown files
+
+**Directory Structure Example:**
+
+```
+Notes/
+├── README.md
+├── Projects/
+│   ├── Project A.md
+│   └── Project B.md
+└── Ideas/
+    └── Future Ideas.md
+```
+
+**Result:** Creates documents with this hierarchy:
+- README (root level)
+- Projects (root level)
+  - Project A (child of Projects)
+  - Project B (child of Projects)
+- Ideas (root level)
+  - Future Ideas (child of Ideas)
+
+**Examples:**
+
+```bash
+# Import entire directory
+funcli documents import z2zK66AaEF ./my-notes
+
+# Import with relative path
+funcli documents import z2zK66AaEF ../documentation
+
+# Import with absolute path
+funcli documents import z2zK66AaEF /home/user/Documents/notes
+```
+
+**Output:**
+
+```
+Starting import from: ./my-notes
+Target space: z2zK66AaEF
+
+Import Summary:
+✓ Successful: 15
+⊘ Skipped: 3
+  Total processed: 15
+```
+
+**Notes:**
+- Large directories may take some time to import
+- Failed imports will be reported with error details
+- Non-markdown files are automatically skipped
+- Folder names become document titles
+- File names (without `.md`) become document titles
+
 ## Examples
 
 ### Export a document to a file
