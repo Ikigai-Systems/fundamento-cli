@@ -2,6 +2,9 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { Config } from "./config.js";
 import { FundamentoClient } from "./client.js";
+import matter from "gray-matter";
+import fs from "fs";
+import path from "path";
 
 const program = new Command();
 
@@ -136,6 +139,59 @@ documentsCommand
     }
   });
 
+documentsCommand
+  .command("create <space-npi>")
+  .description("Create a new document from markdown file or stdin")
+  .argument("[file]", "Markdown file (omit to read from stdin)")
+  .option("-p, --parent <npi>", "Parent document NPI (for nested documents)")
+  .option("-t, --title <title>", "Document title (overrides frontmatter)")
+  .action(async (spaceNpi, file, options) => {
+    try {
+      const config = new Config({
+        apiKey: program.opts().token,
+        baseUrl: program.opts().baseUrl
+      });
+      const client = new FundamentoClient(config);
+
+      // Read content from file or stdin
+      let content;
+      if (file) {
+        content = fs.readFileSync(file, "utf8");
+      } else {
+        // Read from stdin
+        content = await readStdin();
+      }
+
+      // Parse frontmatter
+      const { data: frontmatter, content: markdown } = matter(content);
+
+      // Determine title (priority: CLI arg > frontmatter > filename > "Untitled")
+      let title = options.title || frontmatter.title;
+      if (!title && file) {
+        title = path.basename(file, path.extname(file));
+      }
+      if (!title) {
+        title = "Untitled";
+      }
+
+      // Determine parent (priority: CLI arg > frontmatter)
+      const parentDocumentNpi = options.parent || frontmatter.parentNpi;
+
+      // Create document
+      const document = await client.createDocument(spaceNpi, {
+        title,
+        markdown,
+        parentDocumentNpi
+      });
+
+      console.log(chalk.green("✓") + " Document created successfully!");
+      console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
+    } catch (error) {
+      console.error(chalk.red("Error:"), error.message);
+      process.exit(1);
+    }
+  });
+
 function printDocumentTree(documents, level) {
   const indent = "  ".repeat(level);
 
@@ -146,6 +202,26 @@ function printDocumentTree(documents, level) {
       printDocumentTree(doc.children, level + 1);
     }
   }
+}
+
+async function readStdin() {
+  const chunks = [];
+
+  return new Promise((resolve, reject) => {
+    process.stdin.setEncoding("utf8");
+
+    process.stdin.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
+
+    process.stdin.on("end", () => {
+      resolve(chunks.join(""));
+    });
+
+    process.stdin.on("error", (error) => {
+      reject(error);
+    });
+  });
 }
 
 program.parse();

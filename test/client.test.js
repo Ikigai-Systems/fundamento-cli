@@ -30,3 +30,38 @@ test("FundamentoClient should set base URL", () => {
 
   assert.strictEqual(client.axios.defaults.baseURL, "http://localhost:3000");
 });
+
+test("FundamentoClient createDocument should format request correctly", () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  // Mock axios post
+  const originalPost = client.axios.post;
+  let capturedUrl, capturedData;
+
+  client.axios.post = async (url, data) => {
+    capturedUrl = url;
+    capturedData = data;
+    return { data: { npi: "test123", title: "Test" } };
+  };
+
+  // Call createDocument
+  client.createDocument("space123", {
+    title: "Test Document",
+    markdown: "# Hello",
+    parentDocumentNpi: "parent123"
+  });
+
+  // Verify the request format
+  assert.strictEqual(capturedUrl, "/api/v1/documents");
+  assert.deepStrictEqual(capturedData, {
+    document: {
+      title: "Test Document",
+      markdown: "# Hello",
+      parent_document_npi: "parent123"
+    }
+  });
+
+  // Restore original post
+  client.axios.post = originalPost;
+});

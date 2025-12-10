@@ -157,12 +157,110 @@ funcli documents get abc123
 funcli documents get abc123 --format json
 ```
 
+#### Create a new document
+
+```bash
+funcli documents create <space-npi> [file]
+```
+
+Creates a new document from a markdown file or stdin. Supports frontmatter for metadata.
+
+**Arguments:**
+- `<space-npi>` - Space NPI where the document will be created
+- `[file]` - Path to markdown file (optional, reads from stdin if omitted)
+
+**Options:**
+- `-p, --parent <npi>` - Parent document NPI (for nested documents)
+- `-t, --title <title>` - Document title (overrides frontmatter and filename)
+
+**Frontmatter Support:**
+
+You can include metadata in your markdown file using YAML frontmatter:
+
+```markdown
+---
+title: My Document Title
+parentNpi: abc123
+---
+
+# Document content starts here
+```
+
+**Title Resolution Priority:**
+1. CLI option (`--title`)
+2. Frontmatter (`title`)
+3. Filename (without extension)
+4. "Untitled" (fallback)
+
+**Parent Resolution Priority:**
+1. CLI option (`--parent`)
+2. Frontmatter (`parentNpi`)
+3. None (document created at space root)
+
+**Examples:**
+
+```bash
+# Create from file (title from frontmatter or filename)
+funcli documents create z2zK66AaEF my-document.md
+
+# Create from file with custom title
+funcli documents create z2zK66AaEF my-document.md --title "Custom Title"
+
+# Create nested document (under parent)
+funcli documents create z2zK66AaEF child.md --parent abc123
+
+# Create from stdin
+echo "# My Document\n\nContent here" | funcli documents create z2zK66AaEF
+
+# Create from stdin with title
+cat document.md | funcli documents create z2zK66AaEF --title "New Document"
+```
+
+**Example with frontmatter:**
+
+```bash
+# my-document.md
+---
+title: API Documentation
+parentNpi: def456
+---
+
+# API Reference
+
+This document contains API documentation...
+```
+
+```bash
+funcli documents create z2zK66AaEF my-document.md
+# Creates "API Documentation" as child of def456
+```
+
 ## Examples
 
 ### Export a document to a file
 
 ```bash
 funcli documents get abc123 > document.md
+```
+
+### Create and import documents
+
+```bash
+# Create a simple document
+echo "# My Notes\n\nSome content" | funcli documents create z2zK66AaEF --title "Daily Notes"
+
+# Import an existing markdown file
+funcli documents create z2zK66AaEF README.md
+
+# Create a nested document hierarchy
+funcli documents create z2zK66AaEF parent.md
+# Note the NPI of the created document, then:
+funcli documents create z2zK66AaEF child.md --parent <parent-npi>
+
+# Batch import multiple documents
+for file in docs/*.md; do
+  funcli documents create z2zK66AaEF "$file"
+done
 ```
 
 ### Search for a space and get its documents
@@ -229,15 +327,6 @@ npm test
 ```bash
 npm run lint
 ```
-
-## API Endpoints
-
-The CLI uses the Fundamento REST API v1:
-
-- `GET /api/v1/spaces` - List spaces
-- `GET /api/v1/spaces/:npi` - Get space details
-- `GET /api/v1/spaces/:space_npi/documents` - List documents in a space
-- `GET /api/v1/documents/:npi` - Get document content
 
 ## Contributing
 

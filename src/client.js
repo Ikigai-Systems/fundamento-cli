@@ -42,4 +42,17 @@ export class FundamentoClient {
     const response = await this.axios.get(`/api/v1/documents/${npi}.${format}`);
     return response.data;
   }
+
+  async createDocument(spaceNpi, { title, markdown, parentDocumentNpi }) {
+    const response = await this.axios.post("/api/v1/documents", {
+      document: {
+        title,
+        markdown,
+        parent_document_npi: parentDocumentNpi
+      }
+    }, {
+      params: { space_npi: spaceNpi }
+    });
+    return response.data;
+  }
 }
