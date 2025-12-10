@@ -48,11 +48,11 @@ test("DirectoryImporter results structure", async () => {
   try {
     const results = await importer.importDirectory(testDir);
 
-    assert.ok(results.hasOwnProperty("total"));
-    assert.ok(results.hasOwnProperty("successful"));
-    assert.ok(results.hasOwnProperty("failed"));
-    assert.ok(results.hasOwnProperty("skipped"));
-    assert.ok(results.hasOwnProperty("documents"));
+    assert.ok(Object.hasOwn(results, "total"));
+    assert.ok(Object.hasOwn(results, "successful"));
+    assert.ok(Object.hasOwn(results, "failed"));
+    assert.ok(Object.hasOwn(results, "skipped"));
+    assert.ok(Object.hasOwn(results, "documents"));
     assert.ok(Array.isArray(results.documents));
   } finally {
     // Cleanup
