@@ -65,3 +65,36 @@ test("FundamentoClient createDocument should format request correctly", () => {
   // Restore original post
   client.axios.post = originalPost;
 });
+
+test("FundamentoClient createSpace should format request correctly", () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  // Mock axios post
+  const originalPost = client.axios.post;
+  let capturedUrl, capturedData;
+
+  client.axios.post = async (url, data) => {
+    capturedUrl = url;
+    capturedData = data;
+    return { data: { npi: "space123", name: "Test Space", access_mode: "public" } };
+  };
+
+  // Call createSpace
+  client.createSpace({
+    name: "Test Space",
+    accessMode: "public"
+  });
+
+  // Verify the request format
+  assert.strictEqual(capturedUrl, "/api/v1/spaces");
+  assert.deepStrictEqual(capturedData, {
+    space: {
+      name: "Test Space",
+      access_mode: "public"
+    }
+  });
+
+  // Restore original post
+  client.axios.post = originalPost;
+});

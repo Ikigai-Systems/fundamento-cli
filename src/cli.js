@@ -81,6 +81,37 @@ spacesCommand
     }
   });
 
+spacesCommand
+  .command("create <name>")
+  .description("Create a new space")
+  .option("-a, --access-mode <mode>", "Access mode: public, restricted, or private (default: public)", "public")
+  .action(async (name, options) => {
+    try {
+      const config = new Config({
+        apiKey: program.opts().token,
+        baseUrl: program.opts().baseUrl
+      });
+      const client = new FundamentoClient(config);
+
+      // Validate access mode
+      const validModes = ["public", "restricted", "private"];
+      const accessMode = options.accessMode.toLowerCase();
+      if (!validModes.includes(accessMode)) {
+        console.error(chalk.red("Error:"), `Invalid access mode. Must be one of: ${validModes.join(", ")}`);
+        process.exit(1);
+      }
+
+      const space = await client.createSpace({ name, accessMode });
+
+      console.log(chalk.green("✓") + " Space created successfully!");
+      console.log(chalk.bold(space.name) + chalk.gray(` (${space.npi})`));
+      console.log(chalk.gray(`Access mode: ${space.access_mode}`));
+    } catch (error) {
+      console.error(chalk.red("Error:"), error.message);
+      process.exit(1);
+    }
+  });
+
 const documentsCommand = program
   .command("documents")
   .description("Manage documents");

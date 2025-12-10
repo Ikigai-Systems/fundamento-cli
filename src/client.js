@@ -33,6 +33,16 @@ export class FundamentoClient {
     return response.data;
   }
 
+  async createSpace({ name, accessMode }) {
+    const response = await this.axios.post("/api/v1/spaces", {
+      space: {
+        name,
+        access_mode: accessMode
+      }
+    });
+    return response.data;
+  }
+
   async listDocuments(spaceNpi) {
     const response = await this.axios.get(`/api/v1/spaces/${spaceNpi}/documents`);
     return response.data;

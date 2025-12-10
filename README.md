@@ -112,6 +112,40 @@ funcli spaces get z2zK66AaEF
 funcli spaces get z2zK66AaEF --json
 ```
 
+#### Create a new space
+
+```bash
+funcli spaces create <name>
+```
+
+Creates a new space. **Note:** Requires manager permissions in your organization.
+
+**Arguments:**
+- `<name>` - Space name (must be unique within your organization)
+
+**Options:**
+- `-a, --access-mode <mode>` - Access mode: `public`, `restricted`, or `private` (default: `public`)
+
+**Access Modes:**
+- **public**: Visible to all organization members
+- **restricted**: Visible to organization members but with limited access
+- **private**: Only visible to space members and teams
+
+**Examples:**
+
+```bash
+# Create a public space (default)
+funcli spaces create "My New Space"
+
+# Create a private space
+funcli spaces create "Private Team Space" --access-mode private
+
+# Create a restricted space
+funcli spaces create "Restricted Space" -a restricted
+```
+
+**Note:** When a space is created, a home document is automatically created for it.
+
 ### Documents
 
 #### List documents in a space
