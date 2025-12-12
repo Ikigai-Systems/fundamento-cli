@@ -65,4 +65,13 @@ export class FundamentoClient {
     });
     return response.data;
   }
+
+  async updateDocument(npi, { markdown }) {
+    const response = await this.axios.patch(`/api/v1/documents/${npi}`, {
+      document: {
+        markdown
+      }
+    });
+    return response.data;
+  }
 }

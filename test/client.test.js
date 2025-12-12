@@ -98,3 +98,34 @@ test("FundamentoClient createSpace should format request correctly", () => {
   // Restore original post
   client.axios.post = originalPost;
 });
+
+test("FundamentoClient updateDocument should format request correctly", () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  // Mock axios patch
+  const originalPatch = client.axios.patch;
+  let capturedUrl, capturedData;
+
+  client.axios.patch = async (url, data) => {
+    capturedUrl = url;
+    capturedData = data;
+    return { data: { npi: "doc123", title: "Updated Document" } };
+  };
+
+  // Call updateDocument
+  client.updateDocument("doc123", {
+    markdown: "# Updated Content"
+  });
+
+  // Verify the request format
+  assert.strictEqual(capturedUrl, "/api/v1/documents/doc123");
+  assert.deepStrictEqual(capturedData, {
+    document: {
+      markdown: "# Updated Content"
+    }
+  });
+
+  // Restore original patch
+  client.axios.patch = originalPatch;
+});

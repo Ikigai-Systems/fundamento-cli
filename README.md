@@ -269,6 +269,76 @@ funcli documents create z2zK66AaEF my-document.md
 # Creates "API Documentation" as child of def456
 ```
 
+#### Update a document
+
+```bash
+funcli documents update <document-npi> [file]
+```
+
+Updates an existing document with new markdown content from a file or stdin. This creates a new version of the document while preserving its history.
+
+**Arguments:**
+- `<document-npi>` - NPI of the document to update
+- `[file]` - Path to markdown file (optional, reads from stdin if omitted)
+
+**Frontmatter Support:**
+
+The update command supports YAML frontmatter for tags, just like the create command:
+
+```markdown
+---
+tags:
+  - updated/tag1
+  - updated/tag2
+---
+
+# Updated content starts here
+```
+
+**Note:** Tags from frontmatter will replace any existing tags on the document.
+
+**Examples:**
+
+```bash
+# Update from file
+funcli documents update abc123 updated-content.md
+
+# Update from stdin
+echo "# Updated Content\n\nNew text here" | funcli documents update abc123
+
+# Update from stdin (multiline)
+cat updated-document.md | funcli documents update abc123
+
+# Update with tags from frontmatter
+funcli documents update abc123 document-with-tags.md
+```
+
+**Example with frontmatter:**
+
+```bash
+# updated-content.md
+---
+tags:
+  - version/2.0
+  - status/reviewed
+---
+
+# Updated API Documentation
+
+This document has been updated with new information...
+```
+
+```bash
+funcli documents update abc123 updated-content.md
+# Updates document abc123 and replaces tags with "version/2.0" and "status/reviewed"
+```
+
+**Notes:**
+- Creates a new version of the document (preserves history)
+- Updates the document's sync state for real-time collaboration
+- Tags from frontmatter replace existing tags
+- Does not change document title or hierarchy position
+
 #### Import documents from directory
 
 ```bash
@@ -357,6 +427,12 @@ echo "# My Notes\n\nSome content" | funcli documents create z2zK66AaEF --title "
 
 # Import an existing markdown file
 funcli documents create z2zK66AaEF README.md
+
+# Update an existing document
+funcli documents update abc123 updated-content.md
+
+# Update from stdin
+cat changes.md | funcli documents update abc123
 
 # Create a nested document hierarchy
 funcli documents create z2zK66AaEF parent.md

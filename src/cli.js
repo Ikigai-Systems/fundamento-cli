@@ -225,6 +225,29 @@ documentsCommand
     }
   }));
 
+documentsCommand
+  .command("update <npi>")
+  .description("Update a document from markdown file or stdin")
+  .argument("[file]", "Markdown file (omit to read from stdin)")
+  .action(withClient(async (client, npi, file) => {
+    // Read content from file or stdin
+    let content;
+    if (file) {
+      content = fs.readFileSync(file, "utf8");
+    } else {
+      // Read from stdin
+      content = await readStdin();
+    }
+
+    // Update document
+    const document = await client.updateDocument(npi, {
+      markdown: content
+    });
+
+    console.log(chalk.green("✓") + " Document updated successfully!");
+    console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
+  }));
+
 function printDocumentTree(documents, level) {
   const indent = "  ".repeat(level);
 
