@@ -139,44 +139,72 @@ documentsCommand
 
 documentsCommand
   .command("create <space-npi>")
-  .description("Create a new document from markdown file or stdin")
-  .argument("[file]", "Markdown file (omit to read from stdin)")
+  .description("Create a new document from markdown file, Word/OpenOffice file, or stdin")
+  .argument("[file]", "File to upload (markdown, .docx, .doc, .odt, etc.) or omit to read markdown from stdin")
   .option("-p, --parent <npi>", "Parent document NPI (for nested documents)")
   .option("-t, --title <title>", "Document title (overrides frontmatter)")
   .action(withClient(async (client, spaceNpi, file, options) => {
-    // Read content from file or stdin
-    let content;
-    if (file) {
-      content = fs.readFileSync(file, "utf8");
+    // Determine if this is a file upload (Word/OpenOffice) or markdown content
+    const fileUploadExtensions = [".docx", ".doc", ".odt", ".rtf", ".txt"];
+    const isFileUpload = file && fileUploadExtensions.some(ext => file.toLowerCase().endsWith(ext));
+
+    if (isFileUpload) {
+      // File upload path - send file directly
+      if (!fs.existsSync(file)) {
+        console.error(chalk.red("Error:"), `File not found: ${file}`);
+        process.exit(1);
+      }
+
+      // Determine title (priority: CLI arg > filename)
+      let title = options.title;
+      if (!title) {
+        title = path.basename(file, path.extname(file));
+      }
+
+      // Create document from file
+      const document = await client.createDocument(spaceNpi, {
+        title,
+        parentDocumentNpi: options.parent,
+        file
+      });
+
+      console.log(chalk.green("✓") + " Document created successfully from file!");
+      console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
     } else {
-      // Read from stdin
-      content = await readStdin();
+      // Markdown path - parse frontmatter
+      let content;
+      if (file) {
+        content = fs.readFileSync(file, "utf8");
+      } else {
+        // Read from stdin
+        content = await readStdin();
+      }
+
+      // Parse frontmatter
+      const { data: frontmatter, content: markdown } = matter(content);
+
+      // Determine title (priority: CLI arg > frontmatter > filename > "Untitled")
+      let title = options.title || frontmatter.title;
+      if (!title && file) {
+        title = path.basename(file, path.extname(file));
+      }
+      if (!title) {
+        title = "Untitled";
+      }
+
+      // Determine parent (priority: CLI arg > frontmatter)
+      const parentDocumentNpi = options.parent || frontmatter.parentNpi;
+
+      // Create document from markdown
+      const document = await client.createDocument(spaceNpi, {
+        title,
+        markdown,
+        parentDocumentNpi
+      });
+
+      console.log(chalk.green("✓") + " Document created successfully!");
+      console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
     }
-
-    // Parse frontmatter
-    const { data: frontmatter, content: markdown } = matter(content);
-
-    // Determine title (priority: CLI arg > frontmatter > filename > "Untitled")
-    let title = options.title || frontmatter.title;
-    if (!title && file) {
-      title = path.basename(file, path.extname(file));
-    }
-    if (!title) {
-      title = "Untitled";
-    }
-
-    // Determine parent (priority: CLI arg > frontmatter)
-    const parentDocumentNpi = options.parent || frontmatter.parentNpi;
-
-    // Create document
-    const document = await client.createDocument(spaceNpi, {
-      title,
-      markdown,
-      parentDocumentNpi
-    });
-
-    console.log(chalk.green("✓") + " Document created successfully!");
-    console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
   }));
 
 documentsCommand

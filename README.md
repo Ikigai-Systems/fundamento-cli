@@ -197,11 +197,13 @@ funcli documents get abc123 --format json
 funcli documents create <space-npi> [file]
 ```
 
-Creates a new document from a markdown file or stdin. Supports frontmatter for metadata.
+Creates a new document from a markdown file, Word/OpenOffice file, or stdin. Supports frontmatter for metadata.
 
 **Arguments:**
 - `<space-npi>` - Space NPI where the document will be created
-- `[file]` - Path to markdown file (optional, reads from stdin if omitted)
+- `[file]` - Path to file (optional, reads markdown from stdin if omitted)
+  - Markdown files: `.md`
+  - Word/OpenOffice files: `.docx`, `.doc`, `.odt`, `.rtf`, `.txt`
 
 **Options:**
 - `-p, --parent <npi>` - Parent document NPI (for nested documents)
@@ -234,8 +236,14 @@ parentNpi: abc123
 **Examples:**
 
 ```bash
-# Create from file (title from frontmatter or filename)
+# Create from markdown file (title from frontmatter or filename)
 funcli documents create z2zK66AaEF my-document.md
+
+# Create from Word document
+funcli documents create z2zK66AaEF report.docx
+
+# Create from OpenOffice document
+funcli documents create z2zK66AaEF document.odt
 
 # Create from file with custom title
 funcli documents create z2zK66AaEF my-document.md --title "Custom Title"
@@ -243,7 +251,10 @@ funcli documents create z2zK66AaEF my-document.md --title "Custom Title"
 # Create nested document (under parent)
 funcli documents create z2zK66AaEF child.md --parent abc123
 
-# Create from stdin
+# Create nested Word document
+funcli documents create z2zK66AaEF section.docx --parent abc123 --title "Section 1"
+
+# Create from stdin (markdown only)
 echo "# My Document\n\nContent here" | funcli documents create z2zK66AaEF
 
 # Create from stdin with title
@@ -428,6 +439,12 @@ echo "# My Notes\n\nSome content" | funcli documents create z2zK66AaEF --title "
 # Import an existing markdown file
 funcli documents create z2zK66AaEF README.md
 
+# Import a Word document
+funcli documents create z2zK66AaEF report.docx
+
+# Import an OpenOffice document
+funcli documents create z2zK66AaEF document.odt --title "Important Document"
+
 # Update an existing document
 funcli documents update abc123 updated-content.md
 
@@ -439,8 +456,13 @@ funcli documents create z2zK66AaEF parent.md
 # Note the NPI of the created document, then:
 funcli documents create z2zK66AaEF child.md --parent <parent-npi>
 
-# Batch import multiple documents
+# Batch import markdown documents
 for file in docs/*.md; do
+  funcli documents create z2zK66AaEF "$file"
+done
+
+# Batch import Word documents
+for file in reports/*.docx; do
   funcli documents create z2zK66AaEF "$file"
 done
 ```

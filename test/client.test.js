@@ -129,3 +129,84 @@ test("FundamentoClient updateDocument should format request correctly", () => {
   // Restore original patch
   client.axios.patch = originalPatch;
 });
+
+test("FundamentoClient createDocument with file should use FormData", async () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  // Mock axios post
+  const originalPost = client.axios.post;
+  let capturedUrl, capturedData, capturedConfig;
+
+  client.axios.post = async (url, data, config) => {
+    capturedUrl = url;
+    capturedData = data;
+    capturedConfig = config;
+    return { data: { npi: "test123", title: "Test Document" } };
+  };
+
+  // Call createDocument with file
+  await client.createDocument("space123", {
+    title: "Test Document",
+    parentDocumentNpi: "parent123",
+    file: "../fundamento-cloud/spec/fixtures/files/pandoc/Volume-2-Terms-of-Reference.docx"
+  });
+
+  // Verify the request format
+  assert.strictEqual(capturedUrl, "/api/v1/documents");
+
+  // Verify FormData was used (it should have getHeaders method)
+  assert.ok(capturedData);
+  assert.ok(typeof capturedData.getHeaders === "function");
+
+  // Verify params and headers
+  assert.ok(capturedConfig);
+  assert.deepStrictEqual(capturedConfig.params, { space_npi: "space123" });
+  assert.ok(capturedConfig.headers);
+  assert.strictEqual(capturedConfig.headers.Authorization, "Bearer test-key");
+
+  // Restore original post
+  client.axios.post = originalPost;
+});
+
+test("FundamentoClient createDocument with markdown should use JSON", async () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  // Mock axios post
+  const originalPost = client.axios.post;
+  let capturedUrl, capturedData, capturedConfig;
+
+  client.axios.post = async (url, data, config) => {
+    capturedUrl = url;
+    capturedData = data;
+    capturedConfig = config;
+    return { data: { npi: "test123", title: "Test Document" } };
+  };
+
+  // Call createDocument with markdown
+  await client.createDocument("space123", {
+    title: "Test Document",
+    markdown: "# Hello",
+    parentDocumentNpi: "parent123"
+  });
+
+  // Verify the request format
+  assert.strictEqual(capturedUrl, "/api/v1/documents");
+
+  // Verify JSON was used (not FormData)
+  assert.deepStrictEqual(capturedData, {
+    document: {
+      title: "Test Document",
+      markdown: "# Hello",
+      parent_document_npi: "parent123"
+    }
+  });
+
+  // Verify params
+  assert.ok(capturedConfig);
+  assert.deepStrictEqual(capturedConfig.params, { space_npi: "space123" });
+
+  // Restore original post
+  client.axios.post = originalPost;
+});
