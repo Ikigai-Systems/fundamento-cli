@@ -49,7 +49,7 @@ test("FundamentoClient createDocument should format request correctly", () => {
   client.createDocument("space123", {
     title: "Test Document",
     markdown: "# Hello",
-    parentDocumentNpi: "parent123"
+    parentDocumentId: "parent123"
   });
 
   // Verify the request format
@@ -148,7 +148,7 @@ test("FundamentoClient createDocument with file should use FormData", async () =
   // Call createDocument with file
   await client.createDocument("space123", {
     title: "Test Document",
-    parentDocumentNpi: "parent123",
+    parentDocumentId: "parent123",
     file: "../fundamento-cloud/spec/fixtures/files/pandoc/Volume-2-Terms-of-Reference.docx"
   });
 
@@ -188,7 +188,7 @@ test("FundamentoClient createDocument with markdown should use JSON", async () =
   await client.createDocument("space123", {
     title: "Test Document",
     markdown: "# Hello",
-    parentDocumentNpi: "parent123"
+    parentDocumentId: "parent123"
   });
 
   // Verify the request format

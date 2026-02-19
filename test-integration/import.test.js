@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { createTestClient, uniqueName } from "./helpers.js";
-import { DirectoryImporter } from "../../src/importer.js";
+import { DirectoryImporter } from "../src/importer.js";
 
 describe("directory import", () => {
   let client;
@@ -61,13 +61,13 @@ describe("directory import", () => {
     assert.strictEqual(results.skipped, 1, "should skip image.png");
     assert.strictEqual(results.successful, 4, "should create 4 documents: README, Guide folder, getting-started, advanced");
 
-    // Verify the Guide directory document was created and has an NPI
+    // Verify the Guide directory document was created and has an ID
     const guideDoc = results.documents.find(d => d.title === "Guide" && d.type === "directory");
     assert(guideDoc, "should have a Guide directory document");
-    assert(guideDoc.npi, "Guide document should have an npi from API response");
+    assert(guideDoc.id, "Guide document should have an id from API response");
 
     // Verify child documents reference the Guide as parent
-    const children = results.documents.filter(d => d.parent === guideDoc.npi);
+    const children = results.documents.filter(d => d.parent === guideDoc.id);
     assert.strictEqual(children.length, 2, "Guide should have 2 child documents");
 
     const childTitles = children.map(c => c.title).sort();

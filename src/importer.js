@@ -3,10 +3,10 @@ import path from "path";
 import matter from "gray-matter";
 
 export class DirectoryImporter {
-  constructor(client, spaceNpi) {
+  constructor(client, spaceId) {
     this.client = client;
-    this.spaceNpi = spaceNpi;
-    this.pathToNpiMap = new Map(); // Maps directory paths to document NPIs
+    this.spaceId = spaceId;
+    this.pathToIdMap = new Map(); // Maps directory paths to document IDs
   }
 
   async importDirectory(dirPath) {
@@ -23,7 +23,7 @@ export class DirectoryImporter {
     return results;
   }
 
-  async _traverseAndImport(currentPath, parentNpi, results) {
+  async _traverseAndImport(currentPath, parentId, results) {
     const entries = fs.readdirSync(currentPath, { withFileTypes: true });
 
     // Sort: directories first, then files
@@ -38,23 +38,23 @@ export class DirectoryImporter {
         results.total++;
 
         // Create a document for this directory
-        const dirDoc = await this.client.createDocument(this.spaceNpi, {
+        const dirDoc = await this.client.createDocument(this.spaceId, {
           title: dir.name,
           markdown: `# ${dir.name}`,
-          parentDocumentNpi: parentNpi
+          parentDocumentId: parentId
         });
 
         results.successful++;
         results.documents.push({
           type: "directory",
           path: fullPath,
-          npi: dirDoc.id,
+          id: dirDoc.id,
           title: dirDoc.title,
-          parent: parentNpi
+          parent: parentId
         });
 
-        // Store the NPI for this directory
-        this.pathToNpiMap.set(fullPath, dirDoc.id);
+        // Store the ID for this directory
+        this.pathToIdMap.set(fullPath, dirDoc.id);
 
         // Recursively process contents of this directory
         await this._traverseAndImport(fullPath, dirDoc.id, results);
@@ -96,19 +96,19 @@ export class DirectoryImporter {
         const title = frontmatter.title || path.basename(file.name, ext);
 
         // Create the document
-        const doc = await this.client.createDocument(this.spaceNpi, {
+        const doc = await this.client.createDocument(this.spaceId, {
           title,
           markdown,
-          parentDocumentNpi: parentNpi
+          parentDocumentId: parentId
         });
 
         results.successful++;
         results.documents.push({
           type: "file",
           path: fullPath,
-          npi: doc.id,
+          id: doc.id,
           title: doc.title,
-          parent: parentNpi,
+          parent: parentId,
           hasFrontmatter: Object.keys(frontmatter).length > 0
         });
 

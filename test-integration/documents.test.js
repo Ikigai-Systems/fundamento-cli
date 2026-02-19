@@ -95,7 +95,7 @@ describe("documents", () => {
     const child = await client.createDocument(testSpaceId, {
       title: childTitle,
       markdown: "# Child",
-      parentDocumentNpi: parent.id
+      parentDocumentId: parent.id
     });
 
     assert(typeof child.id === "string", "child should have string id");

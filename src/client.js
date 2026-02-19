@@ -30,8 +30,8 @@ export class FundamentoClient {
     return response.data;
   }
 
-  async getSpace(npi) {
-    const response = await this.axios.get(`/api/v1/spaces/${npi}`);
+  async getSpace(id) {
+    const response = await this.axios.get(`/api/v1/spaces/${id}`);
     return response.data;
   }
 
@@ -45,19 +45,19 @@ export class FundamentoClient {
     return response.data;
   }
 
-  async listDocuments(spaceNpi) {
+  async listDocuments(spaceId) {
     const response = await this.axios.get("/api/v1/documents", {
-      params: { space_id: spaceNpi }
+      params: { space_id: spaceId }
     });
     return response.data;
   }
 
-  async getDocument(npi, format = "markdown") {
-    const response = await this.axios.get(`/api/v1/documents/${npi}.${format}`);
+  async getDocument(id, format = "markdown") {
+    const response = await this.axios.get(`/api/v1/documents/${id}.${format}`);
     return response.data;
   }
 
-  async createDocument(spaceNpi, { title, markdown, parentDocumentNpi, file }) {
+  async createDocument(spaceId, { title, markdown, parentDocumentId, file }) {
     if (file) {
       // Use multipart form data for file uploads
       const formData = new FormData();
@@ -65,12 +65,12 @@ export class FundamentoClient {
       if (title) {
         formData.append("document[title]", title);
       }
-      if (parentDocumentNpi) {
-        formData.append("document[parent_document_id]", parentDocumentNpi);
+      if (parentDocumentId) {
+        formData.append("document[parent_document_id]", parentDocumentId);
       }
 
       const response = await this.axios.post("/api/v1/documents", formData, {
-        params: { space_id: spaceNpi },
+        params: { space_id: spaceId },
         headers: {
           ...formData.getHeaders(),
           "Authorization": `Bearer ${this.config.apiKey}`
@@ -83,17 +83,17 @@ export class FundamentoClient {
         document: {
           title,
           markdown,
-          parent_document_id: parentDocumentNpi
+          parent_document_id: parentDocumentId
         }
       }, {
-        params: { space_id: spaceNpi }
+        params: { space_id: spaceId }
       });
       return response.data;
     }
   }
 
-  async updateDocument(npi, { markdown }) {
-    const response = await this.axios.patch(`/api/v1/documents/${npi}`, {
+  async updateDocument(id, { markdown }) {
+    const response = await this.axios.patch(`/api/v1/documents/${id}`, {
       document: {
         markdown
       }

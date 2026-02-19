@@ -56,11 +56,11 @@ spacesCommand
   }));
 
 spacesCommand
-  .command("get <npi>")
+  .command("get <id>")
   .description("Get details of a specific space")
   .option("-j, --json", "Output as JSON")
-  .action(withClient(async (client, npi, options) => {
-    const space = await client.getSpace(npi);
+  .action(withClient(async (client, id, options) => {
+    const space = await client.getSpace(id);
 
     if (options.json) {
       console.log(JSON.stringify(space, null, 2));
@@ -104,11 +104,11 @@ const documentsCommand = program
   .description("Manage documents");
 
 documentsCommand
-  .command("list <space-npi>")
+  .command("list <space-id>")
   .description("List documents in a space")
   .option("-j, --json", "Output as JSON")
-  .action(withClient(async (client, spaceNpi, options) => {
-    const documents = await client.listDocuments(spaceNpi);
+  .action(withClient(async (client, spaceId, options) => {
+    const documents = await client.listDocuments(spaceId);
 
     if (options.json) {
       console.log(JSON.stringify(documents, null, 2));
@@ -124,11 +124,11 @@ documentsCommand
   }));
 
 documentsCommand
-  .command("get <npi>")
+  .command("get <id>")
   .description("Get a document")
   .option("-f, --format <format>", "Output format (markdown|json)", "markdown")
-  .action(withClient(async (client, npi, options) => {
-    const document = await client.getDocument(npi, options.format);
+  .action(withClient(async (client, id, options) => {
+    const document = await client.getDocument(id, options.format);
 
     if (options.format === "json") {
       console.log(JSON.stringify(document, null, 2));
@@ -138,12 +138,12 @@ documentsCommand
   }));
 
 documentsCommand
-  .command("create <space-npi>")
+  .command("create <space-id>")
   .description("Create a new document from markdown file, Word/OpenOffice file, or stdin")
   .argument("[file]", "File to upload (markdown, .docx, .doc, .odt, etc.) or omit to read markdown from stdin")
-  .option("-p, --parent <npi>", "Parent document NPI (for nested documents)")
+  .option("-p, --parent <id>", "Parent document ID (for nested documents)")
   .option("-t, --title <title>", "Document title (overrides frontmatter)")
-  .action(withClient(async (client, spaceNpi, file, options) => {
+  .action(withClient(async (client, spaceId, file, options) => {
     // Determine if this is a file upload (Word/OpenOffice) or markdown content
     const fileUploadExtensions = [".docx", ".doc", ".odt", ".rtf", ".txt"];
     const isFileUpload = file && fileUploadExtensions.some(ext => file.toLowerCase().endsWith(ext));
@@ -162,9 +162,9 @@ documentsCommand
       }
 
       // Create document from file
-      const document = await client.createDocument(spaceNpi, {
+      const document = await client.createDocument(spaceId, {
         title,
-        parentDocumentNpi: options.parent,
+        parentDocumentId: options.parent,
         file
       });
 
@@ -193,13 +193,13 @@ documentsCommand
       }
 
       // Determine parent (priority: CLI arg > frontmatter)
-      const parentDocumentNpi = options.parent || frontmatter.parentNpi;
+      const parentDocumentId = options.parent || frontmatter.parentNpi;
 
       // Create document from markdown
-      const document = await client.createDocument(spaceNpi, {
+      const document = await client.createDocument(spaceId, {
         title,
         markdown,
-        parentDocumentNpi
+        parentDocumentId
       });
 
       console.log(chalk.green("✓") + " Document created successfully!");
@@ -208,9 +208,9 @@ documentsCommand
   }));
 
 documentsCommand
-  .command("import <space-npi> <directory>")
+  .command("import <space-id> <directory>")
   .description("Import all markdown files from a directory, maintaining hierarchy")
-  .action(withClient(async (client, spaceNpi, directory) => {
+  .action(withClient(async (client, spaceId, directory) => {
     // Validate directory exists
     if (!fs.existsSync(directory)) {
       console.error(chalk.red("Error:"), `Directory not found: ${directory}`);
@@ -223,10 +223,10 @@ documentsCommand
     }
 
     console.log(chalk.blue("Starting import from:"), directory);
-    console.log(chalk.blue("Target space:"), spaceNpi);
+    console.log(chalk.blue("Target space:"), spaceId);
     console.log();
 
-    const importer = new DirectoryImporter(client, spaceNpi);
+    const importer = new DirectoryImporter(client, spaceId);
     const results = await importer.importDirectory(directory);
 
     console.log();
@@ -254,10 +254,10 @@ documentsCommand
   }));
 
 documentsCommand
-  .command("update <npi>")
+  .command("update <id>")
   .description("Update a document from markdown file or stdin")
   .argument("[file]", "Markdown file (omit to read from stdin)")
-  .action(withClient(async (client, npi, file) => {
+  .action(withClient(async (client, id, file) => {
     // Read content from file or stdin
     let content;
     if (file) {
@@ -268,7 +268,7 @@ documentsCommand
     }
 
     // Update document
-    const document = await client.updateDocument(npi, {
+    const document = await client.updateDocument(id, {
       markdown: content
     });
 
@@ -280,6 +280,7 @@ function printDocumentTree(documents, level) {
   const indent = "  ".repeat(level);
 
   for (const doc of documents) {
+    // Note: nested documents from spaces#show use `npi` as the field name
     console.log(indent + chalk.cyan(doc.title) + chalk.gray(` (${doc.npi})`));
 
     if (doc.children && doc.children.length > 0) {

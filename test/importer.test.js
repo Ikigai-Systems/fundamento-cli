@@ -8,19 +8,19 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-test("DirectoryImporter should track path to NPI mappings", () => {
+test("DirectoryImporter should track path to ID mappings", () => {
   const mockClient = {};
   const importer = new DirectoryImporter(mockClient, "space123");
 
-  assert.ok(importer.pathToNpiMap instanceof Map);
-  assert.strictEqual(importer.pathToNpiMap.size, 0);
+  assert.ok(importer.pathToIdMap instanceof Map);
+  assert.strictEqual(importer.pathToIdMap.size, 0);
 });
 
-test("DirectoryImporter should store space NPI", () => {
+test("DirectoryImporter should store space ID", () => {
   const mockClient = {};
   const importer = new DirectoryImporter(mockClient, "space123");
 
-  assert.strictEqual(importer.spaceNpi, "space123");
+  assert.strictEqual(importer.spaceId, "space123");
 });
 
 test("DirectoryImporter should have correct client reference", () => {
@@ -105,9 +105,9 @@ test("DirectoryImporter should process markdown files", async () => {
   let capturedParams = null;
 
   const mockClient = {
-    createDocument: async (spaceNpi, params) => {
+    createDocument: async (spaceId, params) => {
       createDocumentCalled = true;
-      capturedParams = { spaceNpi, ...params };
+      capturedParams = { spaceId, ...params };
       return { id: "doc123", title: params.title };
     }
   };
@@ -126,7 +126,7 @@ test("DirectoryImporter should process markdown files", async () => {
     const results = await importer.importDirectory(testDir);
 
     assert.ok(createDocumentCalled);
-    assert.strictEqual(capturedParams.spaceNpi, "space123");
+    assert.strictEqual(capturedParams.spaceId, "space123");
     assert.strictEqual(capturedParams.title, "document");
     assert.ok(capturedParams.markdown.includes("# Test Document"));
     assert.strictEqual(results.successful, 1);

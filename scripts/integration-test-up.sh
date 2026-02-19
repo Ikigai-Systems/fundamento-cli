@@ -3,12 +3,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$PROJECT_DIR/docker-compose.test.yml"
 
 BASE_URL="${FUNDAMENTO_TEST_URL:-http://localhost:3333}"
 
 echo "Starting Fundamento test stack..."
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose -p fundamento-cli up -d
 
 echo "Waiting for Fundamento to be ready..."
 MAX_ATTEMPTS=60
@@ -18,7 +17,7 @@ until curl -sf "$BASE_URL" > /dev/null 2>&1; do
   if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
     echo "ERROR: Fundamento did not become ready after ${MAX_ATTEMPTS}s"
     echo "Logs:"
-    docker compose -f "$COMPOSE_FILE" logs website --tail=50
+    docker compose -p fundamento-cli logs website --tail=50
     exit 1
   fi
   sleep 1
@@ -27,7 +26,7 @@ done
 echo "Fundamento is ready at $BASE_URL"
 
 echo "Creating API token..."
-API_KEY=$(docker compose -f "$COMPOSE_FILE" exec -T website bin/rails runner "
+API_KEY=$(docker compose -p fundamento-cli exec -T website bin/rails runner "
   user = User.find_by!(email: 'test@fundamento.test')
   org = Organization.find_by!(name: 'CLI Test Org')
   om = OrganizationMembership.find_by!(user: user, organization: org)

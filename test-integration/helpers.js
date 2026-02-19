@@ -3,13 +3,13 @@ import { promisify } from "node:util";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { Config } from "../../src/config.js";
-import { FundamentoClient } from "../../src/client.js";
+import { Config } from "../src/config.js";
+import { FundamentoClient } from "../src/client.js";
 
 const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const PROJECT_ROOT = path.resolve(__dirname, "../..");
+const PROJECT_ROOT = path.resolve(__dirname, "..");
 
 // Load .env.test if it exists
 const envTestPath = path.join(PROJECT_ROOT, ".env.test");
