@@ -216,7 +216,7 @@ You can include metadata in your markdown file using YAML frontmatter:
 ```markdown
 ---
 title: My Document Title
-parentNpi: abc123
+parentId: abc123
 ---
 
 # Document content starts here
@@ -230,7 +230,7 @@ parentNpi: abc123
 
 **Parent Resolution Priority:**
 1. CLI option (`--parent`)
-2. Frontmatter (`parentNpi`)
+2. Frontmatter (`parentId`)
 3. None (document created at space root)
 
 **Examples:**
@@ -267,7 +267,7 @@ cat document.md | funcli documents create z2zK66AaEF --title "New Document"
 # my-document.md
 ---
 title: API Documentation
-parentNpi: def456
+parentId: def456
 ---
 
 # API Reference

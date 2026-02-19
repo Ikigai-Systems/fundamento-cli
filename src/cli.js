@@ -193,7 +193,7 @@ documentsCommand
       }
 
       // Determine parent (priority: CLI arg > frontmatter)
-      const parentDocumentId = options.parent || frontmatter.parentNpi;
+      const parentDocumentId = options.parent || frontmatter.parentId;
 
       // Create document from markdown
       const document = await client.createDocument(spaceId, {
