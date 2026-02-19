@@ -8,7 +8,8 @@
       "WebSearch",
       "Bash(npm install:*)",
       "Bash(npm run lint:*)",
-      "Bash(npm run test:integration:up:*)"
+      "Bash(npm run test:integration:up:*)",
+      "Bash(npm run test:integration:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
