@@ -1,0 +1,47 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+  repository_dispatch:
+    types: [fundamento-standalone-image-published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip-tests]')"
+
+    env:
+      FUNDAMENTO_VERSION: ${{ github.event.client_payload.version || 'latest' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start test stack
+        run: npm run test:integration:up
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Stop test stack
+        if: always()
+        run: npm run test:integration:down
+
+      - name: Dump Docker logs on failure
+        if: failure()
+        run: docker compose -p fundamento-cli logs --tail=200
