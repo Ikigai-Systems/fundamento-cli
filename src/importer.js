@@ -48,16 +48,16 @@ export class DirectoryImporter {
         results.documents.push({
           type: "directory",
           path: fullPath,
-          npi: dirDoc.npi,
+          npi: dirDoc.id,
           title: dirDoc.title,
           parent: parentNpi
         });
 
         // Store the NPI for this directory
-        this.pathToNpiMap.set(fullPath, dirDoc.npi);
+        this.pathToNpiMap.set(fullPath, dirDoc.id);
 
         // Recursively process contents of this directory
-        await this._traverseAndImport(fullPath, dirDoc.npi, results);
+        await this._traverseAndImport(fullPath, dirDoc.id, results);
 
       } catch (error) {
         results.failed++;
@@ -106,7 +106,7 @@ export class DirectoryImporter {
         results.documents.push({
           type: "file",
           path: fullPath,
-          npi: doc.npi,
+          npi: doc.id,
           title: doc.title,
           parent: parentNpi,
           hasFrontmatter: Object.keys(frontmatter).length > 0

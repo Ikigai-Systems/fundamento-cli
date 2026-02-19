@@ -46,7 +46,7 @@ spacesCommand
     console.log(chalk.bold("\nAvailable Spaces:\n"));
 
     for (const space of spaces) {
-      console.log(chalk.cyan(`${space.name}`) + chalk.gray(` (${space.npi})`));
+      console.log(chalk.cyan(`${space.name}`) + chalk.gray(` (${space.id})`));
       if (space.documents && space.documents.length > 0) {
         console.log(chalk.gray(`  └─ ${space.documents.length} documents`));
       }
@@ -65,7 +65,7 @@ spacesCommand
     if (options.json) {
       console.log(JSON.stringify(space, null, 2));
     } else {
-      console.log(chalk.bold(`\n${space.name}`) + chalk.gray(` (${space.npi})`));
+      console.log(chalk.bold(`\n${space.name}`) + chalk.gray(` (${space.id})`));
       console.log();
 
       if (space.documents && space.documents.length > 0) {
@@ -95,7 +95,7 @@ spacesCommand
     const space = await client.createSpace({ name, accessMode });
 
     console.log(chalk.green("✓") + " Space created successfully!");
-    console.log(chalk.bold(space.name) + chalk.gray(` (${space.npi})`));
+    console.log(chalk.bold(space.name) + chalk.gray(` (${space.id})`));
     console.log(chalk.gray(`Access mode: ${space.access_mode}`));
   }));
 
@@ -116,7 +116,7 @@ documentsCommand
       console.log(chalk.bold("\nDocuments:\n"));
 
       for (const doc of documents) {
-        console.log(chalk.cyan(doc.title) + chalk.gray(` (${doc.npi})`));
+        console.log(chalk.cyan(doc.title) + chalk.gray(` (${doc.id})`));
       }
 
       console.log();
@@ -169,7 +169,7 @@ documentsCommand
       });
 
       console.log(chalk.green("✓") + " Document created successfully from file!");
-      console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
+      console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
     } else {
       // Markdown path - parse frontmatter
       let content;
@@ -203,7 +203,7 @@ documentsCommand
       });
 
       console.log(chalk.green("✓") + " Document created successfully!");
-      console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
+      console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
     }
   }));
 
@@ -273,7 +273,7 @@ documentsCommand
     });
 
     console.log(chalk.green("✓") + " Document updated successfully!");
-    console.log(chalk.bold(document.title) + chalk.gray(` (${document.npi})`));
+    console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
   }));
 
 function printDocumentTree(documents, level) {

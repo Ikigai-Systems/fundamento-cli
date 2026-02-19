@@ -46,7 +46,9 @@ export class FundamentoClient {
   }
 
   async listDocuments(spaceNpi) {
-    const response = await this.axios.get(`/api/v1/spaces/${spaceNpi}/documents`);
+    const response = await this.axios.get("/api/v1/documents", {
+      params: { space_id: spaceNpi }
+    });
     return response.data;
   }
 
@@ -64,11 +66,11 @@ export class FundamentoClient {
         formData.append("document[title]", title);
       }
       if (parentDocumentNpi) {
-        formData.append("document[parent_document_npi]", parentDocumentNpi);
+        formData.append("document[parent_document_id]", parentDocumentNpi);
       }
 
       const response = await this.axios.post("/api/v1/documents", formData, {
-        params: { space_npi: spaceNpi },
+        params: { space_id: spaceNpi },
         headers: {
           ...formData.getHeaders(),
           "Authorization": `Bearer ${this.config.apiKey}`
@@ -81,10 +83,10 @@ export class FundamentoClient {
         document: {
           title,
           markdown,
-          parent_document_npi: parentDocumentNpi
+          parent_document_id: parentDocumentNpi
         }
       }, {
-        params: { space_npi: spaceNpi }
+        params: { space_id: spaceNpi }
       });
       return response.data;
     }
