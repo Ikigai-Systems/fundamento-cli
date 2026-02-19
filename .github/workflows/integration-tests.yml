@@ -16,6 +16,10 @@ jobs:
   integration-tests:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip-tests]')"
+    
+    permissions:
+      contents: read
+      checks: write
 
     env:
       FUNDAMENTO_VERSION: ${{ github.event.client_payload.version || 'latest' }}
@@ -37,6 +41,25 @@ jobs:
 
       - name: Run integration tests
         run: npm run test:integration
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: tmp/integration-results.xml
+          retention-days: 30
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: tmp/integration-results.xml
+          check_name: Integration Test Results
+          summary: true
+          detailed_summary: true
+          fail_on_failure: true
 
       - name: Stop test stack
         if: always()
