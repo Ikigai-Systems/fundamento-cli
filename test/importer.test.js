@@ -32,7 +32,7 @@ test("DirectoryImporter should have correct client reference", () => {
 
 test("DirectoryImporter results structure", async () => {
   const mockClient = {
-    createDocument: async () => ({ npi: "doc123", title: "Test" })
+    createDocument: async () => ({ id: "doc123", title: "Test" })
   };
 
   const importer = new DirectoryImporter(mockClient, "space123");
@@ -63,7 +63,7 @@ test("DirectoryImporter results structure", async () => {
 
 test("DirectoryImporter should skip non-markdown files", async () => {
   const mockClient = {
-    createDocument: async () => ({ npi: "doc123", title: "Test" })
+    createDocument: async () => ({ id: "doc123", title: "Test" })
   };
 
   const importer = new DirectoryImporter(mockClient, "space123");
@@ -108,7 +108,7 @@ test("DirectoryImporter should process markdown files", async () => {
     createDocument: async (spaceNpi, params) => {
       createDocumentCalled = true;
       capturedParams = { spaceNpi, ...params };
-      return { npi: "doc123", title: params.title };
+      return { id: "doc123", title: params.title };
     }
   };
 

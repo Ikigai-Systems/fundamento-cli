@@ -6,9 +6,12 @@
       "Bash(npm test)",
       "Bash(git add:*)",
       "WebSearch",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run test:integration:up:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "task-master-ai",
     "github",

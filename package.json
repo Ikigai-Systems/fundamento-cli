@@ -12,7 +12,10 @@
     "src/"
   ],
   "scripts": {
-    "test": "node --test test/**/*.test.js",
+    "test": "node --test test/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js",
+    "test:integration:up": "./scripts/integration-test-up.sh",
+    "test:integration:down": "./scripts/integration-test-down.sh",
     "lint": "eslint src test",
     "prepublishOnly": "npm test"
   },

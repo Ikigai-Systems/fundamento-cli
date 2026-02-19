@@ -42,7 +42,7 @@ test("FundamentoClient createDocument should format request correctly", () => {
   client.axios.post = async (url, data) => {
     capturedUrl = url;
     capturedData = data;
-    return { data: { npi: "test123", title: "Test" } };
+    return { data: { id: "test123", title: "Test" } };
   };
 
   // Call createDocument
@@ -58,7 +58,7 @@ test("FundamentoClient createDocument should format request correctly", () => {
     document: {
       title: "Test Document",
       markdown: "# Hello",
-      parent_document_npi: "parent123"
+      parent_document_id: "parent123"
     }
   });
 
@@ -77,7 +77,7 @@ test("FundamentoClient createSpace should format request correctly", () => {
   client.axios.post = async (url, data) => {
     capturedUrl = url;
     capturedData = data;
-    return { data: { npi: "space123", name: "Test Space", access_mode: "public" } };
+    return { data: { id: "space123", name: "Test Space", access_mode: "public" } };
   };
 
   // Call createSpace
@@ -110,7 +110,7 @@ test("FundamentoClient updateDocument should format request correctly", () => {
   client.axios.patch = async (url, data) => {
     capturedUrl = url;
     capturedData = data;
-    return { data: { npi: "doc123", title: "Updated Document" } };
+    return { data: { id: "doc123", title: "Updated Document" } };
   };
 
   // Call updateDocument
@@ -142,7 +142,7 @@ test("FundamentoClient createDocument with file should use FormData", async () =
     capturedUrl = url;
     capturedData = data;
     capturedConfig = config;
-    return { data: { npi: "test123", title: "Test Document" } };
+    return { data: { id: "test123", title: "Test Document" } };
   };
 
   // Call createDocument with file
@@ -161,7 +161,7 @@ test("FundamentoClient createDocument with file should use FormData", async () =
 
   // Verify params and headers
   assert.ok(capturedConfig);
-  assert.deepStrictEqual(capturedConfig.params, { space_npi: "space123" });
+  assert.deepStrictEqual(capturedConfig.params, { space_id: "space123" });
   assert.ok(capturedConfig.headers);
   assert.strictEqual(capturedConfig.headers.Authorization, "Bearer test-key");
 
@@ -181,7 +181,7 @@ test("FundamentoClient createDocument with markdown should use JSON", async () =
     capturedUrl = url;
     capturedData = data;
     capturedConfig = config;
-    return { data: { npi: "test123", title: "Test Document" } };
+    return { data: { id: "test123", title: "Test Document" } };
   };
 
   // Call createDocument with markdown
@@ -199,13 +199,13 @@ test("FundamentoClient createDocument with markdown should use JSON", async () =
     document: {
       title: "Test Document",
       markdown: "# Hello",
-      parent_document_npi: "parent123"
+      parent_document_id: "parent123"
     }
   });
 
   // Verify params
   assert.ok(capturedConfig);
-  assert.deepStrictEqual(capturedConfig.params, { space_npi: "space123" });
+  assert.deepStrictEqual(capturedConfig.params, { space_id: "space123" });
 
   // Restore original post
   client.axios.post = originalPost;

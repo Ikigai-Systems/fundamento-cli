@@ -1,0 +1,46 @@
+x-rails-environment: &rails-environment
+  DATABASE_URL: postgres://postgres:password@postgresql/postgres
+  REDIS_URL: redis://redis
+  HTTP_HOST: localhost:3333
+  RAILS_LOG_LEVEL: warn
+
+services:
+  postgresql:
+    image: postgres:16
+    environment:
+      - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+  website:
+    image: ghcr.io/ikigai-systems/fundamento:${FUNDAMENTO_VERSION:-latest}
+    environment:
+      <<: *rails-environment
+      FUNDAMENTO_ORGANIZATION: "CLI Test Org"
+      FUNDAMENTO_ADMIN_EMAIL: "test@fundamento.test"
+      FUNDAMENTO_ADMIN_FIRST_NAME: "Test"
+      FUNDAMENTO_ADMIN_LAST_NAME: "User"
+      FUNDAMENTO_ADMIN_PASSWORD: "test-password!"
+    volumes:
+      - credentials:/rails/config/credentials
+      - storage:/rails/storage
+    ports:
+      - '${RAILS_PORT:-3333}:3000'
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  credentials:
+  storage:
