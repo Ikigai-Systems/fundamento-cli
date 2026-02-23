@@ -100,4 +100,46 @@ export class FundamentoClient {
     });
     return response.data;
   }
+
+  async createImportSession({ spaceId, sourceFormat = "generic", settings = {} }) {
+    const response = await this.axios.post("/api/v1/import_sessions", {
+      space_id: spaceId,
+      source_format: sourceFormat,
+      settings
+    });
+    return response.data;
+  }
+
+  async submitManifest(sessionId, files) {
+    const response = await this.axios.post(`/api/v1/import_sessions/${sessionId}/manifest`, { files });
+    return response.data;
+  }
+
+  async markFileUploaded(sessionId, fileId) {
+    const response = await this.axios.patch(
+      `/api/v1/import_sessions/${sessionId}/import_files/${fileId}`,
+      { status: "uploaded" }
+    );
+    return response.data;
+  }
+
+  async triggerProcessing(sessionId) {
+    const response = await this.axios.post(`/api/v1/import_sessions/${sessionId}/process`);
+    return response.data;
+  }
+
+  async getImportSession(sessionId) {
+    const response = await this.axios.get(`/api/v1/import_sessions/${sessionId}`);
+    return response.data;
+  }
+
+  async cancelImportSession(sessionId) {
+    const response = await this.axios.delete(`/api/v1/import_sessions/${sessionId}`);
+    return response.data;
+  }
+
+  async retryImportSession(sessionId) {
+    const response = await this.axios.post(`/api/v1/import_sessions/${sessionId}/retry`);
+    return response.data;
+  }
 }

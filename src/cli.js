@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { Config } from "./config.js";
 import { FundamentoClient } from "./client.js";
 import { DirectoryImporter } from "./importer.js";
+import { ImportSessionManager } from "./import_session.js";
 import matter from "gray-matter";
 import fs from "fs";
 import path from "path";
@@ -275,6 +276,76 @@ documentsCommand
     console.log(chalk.green("✓") + " Document updated successfully!");
     console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
   }));
+
+const importCommand = program
+  .command("import")
+  .description("Batch import documents and attachments using session-based pipeline");
+
+importCommand
+  .command("start <space-id> <directory>")
+  .description("Start a new batch import session from a local directory")
+  .option("-f, --format <format>", "Source format: generic or obsidian (auto-detected if not set)")
+  .option("-c, --concurrency <n>", "Upload concurrency (default: 5)", parseInt)
+  .option("--ignore <pattern>", "Glob pattern to ignore (can be repeated)", collect, [])
+  .option("--session-file <path>", "Path to session resume file (default: <directory>/.fundamento-session.json)")
+  .action(withClient(async (client, spaceId, directory, options) => {
+    if (!fs.existsSync(directory)) {
+      console.error(chalk.red("Error:"), `Directory not found: ${directory}`);
+      process.exit(1);
+    }
+    if (!fs.statSync(directory).isDirectory()) {
+      console.error(chalk.red("Error:"), `Path is not a directory: ${directory}`);
+      process.exit(1);
+    }
+
+    const manager = new ImportSessionManager(client, {
+      concurrency: options.concurrency,
+      ignore: options.ignore
+    });
+
+    await manager.start(spaceId, directory, {
+      format: options.format,
+      sessionFile: options.sessionFile
+    });
+  }));
+
+importCommand
+  .command("status <session-id>")
+  .description("Show current status of an import session")
+  .action(withClient(async (client, sessionId) => {
+    const manager = new ImportSessionManager(client);
+    await manager.status(sessionId);
+  }));
+
+importCommand
+  .command("cancel <session-id>")
+  .description("Cancel a pending or uploading import session")
+  .action(withClient(async (client, sessionId) => {
+    const manager = new ImportSessionManager(client);
+    await manager.cancel(sessionId);
+  }));
+
+importCommand
+  .command("retry <session-id>")
+  .description("Retry failed files in an import session")
+  .action(withClient(async (client, sessionId) => {
+    const manager = new ImportSessionManager(client);
+    await manager.retry(sessionId);
+  }));
+
+importCommand
+  .command("log <session-id>")
+  .description("Show file-by-file import log for a session")
+  .option("--failed-only", "Only show failed files")
+  .option("-j, --json", "Output as JSON")
+  .action(withClient(async (client, sessionId, options) => {
+    const manager = new ImportSessionManager(client);
+    await manager.log(sessionId, { failedOnly: options.failedOnly, json: options.json });
+  }));
+
+function collect(value, previous) {
+  return previous.concat([value]);
+}
 
 function printDocumentTree(documents, level) {
   const indent = "  ".repeat(level);
