@@ -130,7 +130,7 @@ export class ImportSessionManager {
 
   async #buildManifest(files) {
     return Promise.all(files.map(async (f) => {
-      const checksum = await this.#sha256(f.fullPath)
+      const checksum = await this.#md5Base64(f.fullPath)
       const ext = f.ext.slice(1)
       return {
         relative_path: f.relativePath,
@@ -167,11 +167,14 @@ export class ImportSessionManager {
 
   async #uploadFile(entry, filePath, sessionId) {
     const fileBuffer = fs.readFileSync(filePath)
-    await fetch(entry.direct_upload_url, {
+    const uploadRes = await fetch(entry.direct_upload_url, {
       method: "PUT",
       headers: { "Content-Type": entry.content_type || "application/octet-stream" },
       body: fileBuffer
     })
+    if (!uploadRes.ok) {
+      throw new Error(`Upload failed for ${entry.relative_path}: HTTP ${uploadRes.status}`)
+    }
     await this.client.markFileUploaded(sessionId, entry.id)
   }
 
@@ -209,12 +212,12 @@ export class ImportSessionManager {
     return name.startsWith(".")
   }
 
-  async #sha256(filePath) {
+  async #md5Base64(filePath) {
     return new Promise((resolve, reject) => {
-      const hash = crypto.createHash("sha256")
+      const hash = crypto.createHash("md5")
       const stream = fs.createReadStream(filePath)
       stream.on("data", d => hash.update(d))
-      stream.on("end", () => resolve(hash.digest("hex")))
+      stream.on("end", () => resolve(hash.digest("base64")))
       stream.on("error", reject)
     })
   }
