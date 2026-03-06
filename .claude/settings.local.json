@@ -5,8 +5,5 @@
       "Bash(npm run lint:*)",
       "Bash(npm run test:integration:*)"
     ]
-  },
-  "enabledMcpjsonServers": [
-    "github"
-  ]
+  }
 }
