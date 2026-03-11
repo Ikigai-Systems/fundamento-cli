@@ -17,7 +17,12 @@ export class FundamentoClient {
       response => response,
       error => {
         if (error.response) {
-          const message = error.response.data?.error || error.response.data?.message || error.response.statusText;
+          const data = error.response.data;
+          const errors = data?.errors;
+          const message = data?.error
+            || data?.message
+            || (Array.isArray(errors) ? errors.join(", ") : null)
+            || error.response.statusText;
           throw new Error(`API Error (${error.response.status}): ${message}`);
         }
         throw error;
