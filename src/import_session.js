@@ -180,7 +180,6 @@ export class ImportSessionManager {
 
   async #pollProgress(sessionId) {
     process.stdout.write("\nProcessing ");
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       await new Promise(r => setTimeout(r, 2000));
       const session = await this.client.getImportSession(sessionId);
