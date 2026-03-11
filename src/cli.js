@@ -309,38 +309,67 @@ importCommand
     });
   }));
 
+const SESSION_FILE_NAME = ".fundamento-session.json";
+
+function resolveSessionId(sessionIdOrDir) {
+  const sessionFile = path.join(sessionIdOrDir, SESSION_FILE_NAME);
+  if (!fs.existsSync(sessionFile)) return sessionIdOrDir;
+  try {
+    const data = JSON.parse(fs.readFileSync(sessionFile, "utf8"));
+    if (!data.session_id) throw new Error();
+    return data.session_id;
+  } catch {
+    console.error(chalk.red("Error:"), `Invalid session file: ${sessionFile}`);
+    process.exit(1);
+  }
+}
+
 importCommand
-  .command("status <session-id>")
+  .command("status <session-id|directory>")
   .description("Show current status of an import session")
-  .action(withClient(async (client, sessionId) => {
+  .action(withClient(async (client, sessionIdOrDir) => {
     const manager = new ImportSessionManager(client);
-    await manager.status(sessionId);
+    await manager.status(resolveSessionId(sessionIdOrDir));
   }));
 
 importCommand
-  .command("cancel <session-id>")
+  .command("cancel <session-id|directory>")
   .description("Cancel a pending or uploading import session")
-  .action(withClient(async (client, sessionId) => {
+  .action(withClient(async (client, sessionIdOrDir) => {
     const manager = new ImportSessionManager(client);
-    await manager.cancel(sessionId);
+    const sessionId = resolveSessionId(sessionIdOrDir);
+    try {
+      await manager.cancel(sessionId);
+    } catch (error) {
+      if (error.message.includes("404")) {
+        console.log(`Session ${sessionId} no longer exists on the server.`);
+      } else {
+        throw error;
+      }
+    }
+    const sessionFile = path.join(sessionIdOrDir, SESSION_FILE_NAME);
+    if (fs.existsSync(sessionFile)) {
+      fs.unlinkSync(sessionFile);
+      console.log(`Removed session file: ${sessionFile}`);
+    }
   }));
 
 importCommand
-  .command("retry <session-id>")
+  .command("retry <session-id|directory>")
   .description("Retry failed files in an import session")
-  .action(withClient(async (client, sessionId) => {
+  .action(withClient(async (client, sessionIdOrDir) => {
     const manager = new ImportSessionManager(client);
-    await manager.retry(sessionId);
+    await manager.retry(resolveSessionId(sessionIdOrDir));
   }));
 
 importCommand
-  .command("log <session-id>")
+  .command("log <session-id|directory>")
   .description("Show file-by-file import log for a session")
   .option("--failed-only", "Only show failed files")
   .option("-j, --json", "Output as JSON")
-  .action(withClient(async (client, sessionId, options) => {
+  .action(withClient(async (client, sessionIdOrDir, options) => {
     const manager = new ImportSessionManager(client);
-    await manager.log(sessionId, { failedOnly: options.failedOnly, json: options.json });
+    await manager.log(resolveSessionId(sessionIdOrDir), { failedOnly: options.failedOnly, json: options.json });
   }));
 
 function collect(value, previous) {
