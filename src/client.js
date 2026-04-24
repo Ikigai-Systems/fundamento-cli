@@ -147,4 +147,12 @@ export class FundamentoClient {
     const response = await this.axios.post(`/api/v1/import_sessions/${sessionId}/retry`);
     return response.data;
   }
+
+  async evalFormula(formula, spaceId) {
+    const response = await this.axios.post("/api/v1/formulas/eval", {
+      formula,
+      space_id: spaceId
+    });
+    return response.data;
+  }
 }

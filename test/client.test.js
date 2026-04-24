@@ -169,6 +169,52 @@ test("FundamentoClient createDocument with file should use FormData", async () =
   client.axios.post = originalPost;
 });
 
+test("FundamentoClient evalFormula should format request correctly", () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  const originalPost = client.axios.post;
+  let capturedUrl, capturedData;
+
+  client.axios.post = async (url, data) => {
+    capturedUrl = url;
+    capturedData = data;
+    return { data: { result: 3, commands: [] } };
+  };
+
+  client.evalFormula("1 + 2", "space123");
+
+  assert.strictEqual(capturedUrl, "/api/v1/formulas/eval");
+  assert.deepStrictEqual(capturedData, {
+    formula: "1 + 2",
+    space_id: "space123"
+  });
+
+  client.axios.post = originalPost;
+});
+
+test("FundamentoClient evalFormula without space_id", () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  const originalPost = client.axios.post;
+  let capturedData;
+
+  client.axios.post = async (url, data) => {
+    capturedData = data;
+    return { data: { result: "hello world", commands: [] } };
+  };
+
+  client.evalFormula('Concatenate("hello", " ", "world")', undefined);
+
+  assert.deepStrictEqual(capturedData, {
+    formula: 'Concatenate("hello", " ", "world")',
+    space_id: undefined
+  });
+
+  client.axios.post = originalPost;
+});
+
 test("FundamentoClient createDocument with markdown should use JSON", async () => {
   const config = new Config({ apiKey: "test-key" });
   const client = new FundamentoClient(config);

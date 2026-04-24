@@ -277,6 +277,40 @@ documentsCommand
     console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
   }));
 
+const formulasCommand = program
+  .command("formulas")
+  .description("Evaluate formulas");
+
+formulasCommand
+  .command("eval")
+  .description("Evaluate a formula expression (pass as argument or pipe via stdin)")
+  .argument("[formula]", "Formula to evaluate (omit to read from stdin)")
+  .option("-s, --space <id>", "Space ID (required for table references)")
+  .option("-j, --json", "Output raw JSON response")
+  .action(withClient(async (client, formula, options) => {
+    if (!formula) {
+      formula = await readStdin();
+      formula = formula.trim();
+    }
+    if (!formula) {
+      console.error(chalk.red("Error:"), "No formula provided");
+      process.exit(1);
+    }
+
+    const result = await client.evalFormula(formula, options.space);
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else if (result.error) {
+      console.error(chalk.red("Error:"), result.error);
+      process.exit(1);
+    } else {
+      console.log(result.result);
+      if (result.commands?.length > 0) {
+        console.log(chalk.gray(`\n${result.commands.length} command(s) executed`));
+      }
+    }
+  }));
+
 const importCommand = program
   .command("import")
   .description("Batch import documents and attachments using session-based pipeline");
