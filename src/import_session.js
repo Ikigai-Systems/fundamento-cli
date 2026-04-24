@@ -15,7 +15,7 @@ export class ImportSessionManager {
     this.ignorePatterns = options.ignore || [];
   }
 
-  async start(spaceId, directory, { format, sessionFile } = {}) {
+  async start(spaceId, directory, { format, sessionFile, timeoutMs } = {}) {
     const sessionFilePath = sessionFile || path.join(directory, SESSION_FILE);
     let sessionId = this.#loadSessionId(sessionFilePath);
 
@@ -63,7 +63,7 @@ export class ImportSessionManager {
     console.log(`Session ID: ${sessionId}  (run \`funcli import cancel ${sessionId}\` to cancel)`);
 
     // Poll for completion
-    await this.#pollProgress(sessionId);
+    await this.#pollProgress(sessionId, { timeoutMs });
   }
 
   async status(sessionId) {
@@ -178,8 +178,9 @@ export class ImportSessionManager {
     await this.client.markFileUploaded(sessionId, entry.id);
   }
 
-  async #pollProgress(sessionId) {
+  async #pollProgress(sessionId, { timeoutMs = 30 * 60 * 1000 } = {}) {
     process.stdout.write("\nProcessing ");
+    const deadline = Date.now() + timeoutMs;
     while (true) {
       await new Promise(r => setTimeout(r, 2000));
       const session = await this.client.getImportSession(sessionId);
@@ -191,6 +192,10 @@ export class ImportSessionManager {
       if (["completed", "partial", "failed"].includes(session.status)) {
         console.log(`\n\n✓ Import ${session.status}  (${session.failed_files} failed, ${session.processed_files} imported)`);
         break;
+      }
+
+      if (Date.now() >= deadline) {
+        throw new Error(`Import session ${sessionId} did not complete within ${Math.round(timeoutMs / 60000)} minutes`);
       }
     }
   }

@@ -148,7 +148,7 @@ describe("batch import (ImportSessionManager)", () => {
       console.log = () => {};
 
       try {
-        await manager.start(testSpaceId, tmpDir, { sessionFile });
+        await manager.start(testSpaceId, tmpDir, { sessionFile, timeoutMs: 60_000 });
       } finally {
         process.stdout.write = origWrite;
         console.log = origLog;
