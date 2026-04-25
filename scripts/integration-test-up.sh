@@ -26,7 +26,7 @@ done
 echo "Fundamento is ready at $BASE_URL"
 
 echo "Creating API token..."
-API_KEY=$(docker compose -p fundamento-cli exec -T website bin/rails runner "
+API_KEY=$(docker compose -p fundamento-cli exec -T -e RAILS_LOG_LEVEL=warn website bin/rails runner "
   user = User.find_by!(email: 'test@fundamento.test')
   org = Organization.find_by!(name: 'CLI Test Org')
   om = OrganizationMembership.find_by!(user: user, organization: org)
