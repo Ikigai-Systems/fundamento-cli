@@ -2,7 +2,7 @@ x-rails-environment: &rails-environment
   DATABASE_URL: postgres://postgres:password@postgresql/postgres
   REDIS_URL: redis://redis
   HTTP_HOST: localhost:3333
-  RAILS_LOG_LEVEL: warn
+  RAILS_LOG_LEVEL: debug
 
 services:
   postgresql:
