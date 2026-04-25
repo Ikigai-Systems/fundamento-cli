@@ -40,6 +40,19 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  jobs:
+    image: ghcr.io/ikigai-systems/fundamento:${FUNDAMENTO_VERSION:-latest}
+    command: bundle exec good_job start
+    environment:
+      <<: *rails-environment
+    volumes:
+      - credentials:/rails/config/credentials
+      - storage:/rails/storage
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   credentials:
