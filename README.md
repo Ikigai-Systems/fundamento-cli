@@ -51,11 +51,22 @@ Set your API key using one of these methods:
 
 ### Base URL
 
-By default, the CLI connects to `https://fundamento.cloud`. For testing or self-hosted instances:
+By default, the CLI connects to `https://fundamento.cloud`. For testing or self-hosted instances, set the base URL using one of these methods:
 
-```bash
-funcli --base-url http://localhost:3000 spaces list
-```
+1. **Environment variable**:
+   ```bash
+   export FUNDAMENTO_BASE_URL=http://localhost:3000
+   ```
+
+2. **`.env` file** (for development):
+   ```bash
+   echo "FUNDAMENTO_BASE_URL=http://localhost:3000" >> .env
+   ```
+
+3. **Command line option**:
+   ```bash
+   funcli --base-url http://localhost:3000 spaces list
+   ```
 
 ## Usage
 
@@ -95,7 +106,7 @@ My Space (z2zK66AaEF)
 #### Get space details
 
 ```bash
-funcli spaces get <space-npi>
+funcli spaces get <space-id>
 ```
 
 Shows space information with hierarchical document structure.
@@ -111,6 +122,8 @@ funcli spaces get z2zK66AaEF
 # JSON format
 funcli spaces get z2zK66AaEF --json
 ```
+
+
 
 #### Create a new space
 
@@ -151,7 +164,7 @@ funcli spaces create "Restricted Space" -a restricted
 #### List documents in a space
 
 ```bash
-funcli documents list <space-npi>
+funcli documents list <space-id>
 ```
 
 **Options:**
@@ -174,7 +187,7 @@ API Documentation (ghi789)
 #### Get document content
 
 ```bash
-funcli documents get <document-npi>
+funcli documents get <document-id>
 ```
 
 Retrieves document content in Markdown format.
@@ -194,19 +207,19 @@ funcli documents get abc123 --format json
 #### Create a new document
 
 ```bash
-funcli documents create <space-npi> [file]
+funcli documents create <space-id> [file]
 ```
 
 Creates a new document from a markdown file, Word/OpenOffice file, or stdin. Supports frontmatter for metadata.
 
 **Arguments:**
-- `<space-npi>` - Space NPI where the document will be created
+- `<space-id>` - Space ID where the document will be created
 - `[file]` - Path to file (optional, reads markdown from stdin if omitted)
   - Markdown files: `.md`
   - Word/OpenOffice files: `.docx`, `.doc`, `.odt`, `.rtf`, `.txt`
 
 **Options:**
-- `-p, --parent <npi>` - Parent document NPI (for nested documents)
+- `-p, --parent <id>` - Parent document ID (for nested documents)
 - `-t, --title <title>` - Document title (overrides frontmatter and filename)
 
 **Frontmatter Support:**
@@ -283,13 +296,13 @@ funcli documents create z2zK66AaEF my-document.md
 #### Update a document
 
 ```bash
-funcli documents update <document-npi> [file]
+funcli documents update <document-id> [file]
 ```
 
 Updates an existing document with new markdown content from a file or stdin. This creates a new version of the document while preserving its history.
 
 **Arguments:**
-- `<document-npi>` - NPI of the document to update
+- `<document-id>` - ID of the document to update
 - `[file]` - Path to markdown file (optional, reads from stdin if omitted)
 
 **Frontmatter Support:**
@@ -353,13 +366,13 @@ funcli documents update abc123 updated-content.md
 #### Import documents from directory
 
 ```bash
-funcli documents import <space-npi> <directory>
+funcli documents import <space-id> <directory>
 ```
 
 Imports all markdown files from a directory, maintaining the folder hierarchy as nested documents.
 
 **Arguments:**
-- `<space-npi>` - Space NPI where documents will be imported
+- `<space-id>` - Space ID where documents will be imported
 - `<directory>` - Path to directory containing markdown files
 
 **Behavior:**
@@ -453,8 +466,8 @@ cat changes.md | funcli documents update abc123
 
 # Create a nested document hierarchy
 funcli documents create z2zK66AaEF parent.md
-# Note the NPI of the created document, then:
-funcli documents create z2zK66AaEF child.md --parent <parent-npi>
+# Note the ID of the created document, then:
+funcli documents create z2zK66AaEF child.md --parent <parent-id>
 
 # Batch import markdown documents
 for file in docs/*.md; do
