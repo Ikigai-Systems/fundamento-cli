@@ -169,7 +169,10 @@ export class ImportSessionManager {
     const fileBuffer = fs.readFileSync(filePath);
     const uploadRes = await fetch(entry.direct_upload_url, {
       method: "PUT",
-      headers: { "Content-Type": entry.content_type || "application/octet-stream" },
+      headers: {
+        "Content-Type": entry.content_type || "application/octet-stream",
+        ...entry.direct_upload_headers
+      },
       body: fileBuffer
     });
     if (!uploadRes.ok) {
