@@ -100,6 +100,22 @@ spacesCommand
     console.log(chalk.gray(`Access mode: ${space.access_mode}`));
   }));
 
+spacesCommand
+  .command("archive <id>")
+  .description("Archive a space (manager role required)")
+  .action(withClient(async (client, id) => {
+    const space = await client.archiveSpace(id);
+    console.log(chalk.green("✓") + " Space archived: " + chalk.bold(space.name));
+  }));
+
+spacesCommand
+  .command("unarchive <id>")
+  .description("Unarchive a space (manager role required)")
+  .action(withClient(async (client, id) => {
+    const space = await client.unarchiveSpace(id);
+    console.log(chalk.green("✓") + " Space unarchived: " + chalk.bold(space.name));
+  }));
+
 const documentsCommand = program
   .command("documents")
   .description("Manage documents");

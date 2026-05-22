@@ -50,6 +50,16 @@ export class FundamentoClient {
     return response.data;
   }
 
+  async archiveSpace(id) {
+    const response = await this.axios.put(`/api/v1/spaces/${id}/archive`);
+    return response.data;
+  }
+
+  async unarchiveSpace(id) {
+    const response = await this.axios.put(`/api/v1/spaces/${id}/unarchive`);
+    return response.data;
+  }
+
   async listDocuments(spaceId) {
     const response = await this.axios.get("/api/v1/documents", {
       params: { space_id: spaceId }
