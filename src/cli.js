@@ -105,7 +105,8 @@ spacesCommand
   .description("Archive a space (manager role required)")
   .action(withClient(async (client, id) => {
     const space = await client.archiveSpace(id);
-    console.log(chalk.green("✓") + " Space archived: " + chalk.bold(space.name));
+    console.log(chalk.green("✓") + " Space archived successfully!");
+    console.log(chalk.bold(space.name) + chalk.gray(` (${space.id})`));
   }));
 
 spacesCommand
@@ -113,7 +114,8 @@ spacesCommand
   .description("Unarchive a space (manager role required)")
   .action(withClient(async (client, id) => {
     const space = await client.unarchiveSpace(id);
-    console.log(chalk.green("✓") + " Space unarchived: " + chalk.bold(space.name));
+    console.log(chalk.green("✓") + " Space unarchived successfully!");
+    console.log(chalk.bold(space.name) + chalk.gray(` (${space.id})`));
   }));
 
 const documentsCommand = program
