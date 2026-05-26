@@ -204,7 +204,7 @@ export class ImportSessionManager {
   }
 
   #progressBar(pct, width = 20) {
-    const filled = Math.round(width * pct / 100);
+    const filled = Math.min(width, Math.round(width * pct / 100));
     return "[" + "█".repeat(filled) + "░".repeat(width - filled) + "]";
   }
 
