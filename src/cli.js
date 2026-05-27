@@ -424,6 +424,25 @@ importCommand
     await manager.log(resolveSessionId(sessionIdOrDir), { failedOnly: options.failedOnly, json: options.json });
   }));
 
+importCommand
+  .command("reset <directory>")
+  .description("Remove the local session file so the directory can be imported fresh")
+  .action(async (directory) => {
+    try {
+      const sessionFile = path.join(directory, SESSION_FILE_NAME);
+      if (!fs.existsSync(sessionFile)) {
+        console.log("No session file found — nothing to reset.");
+        return;
+      }
+      fs.unlinkSync(sessionFile);
+      console.log(chalk.green("✓") + ` Removed ${sessionFile}`);
+      console.log(chalk.gray(`Run \`funcli import start <space-id> ${directory}\` to start a fresh import.`));
+    } catch (error) {
+      console.error(chalk.red("Error:"), error.message);
+      process.exit(1);
+    }
+  });
+
 function collect(value, previous) {
   return previous.concat([value]);
 }

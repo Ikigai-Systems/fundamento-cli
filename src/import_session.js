@@ -17,7 +17,7 @@ export class ImportSessionManager {
 
   async start(spaceId, directory, { format, sessionFile, timeoutMs } = {}) {
     const sessionFilePath = sessionFile || path.join(directory, SESSION_FILE);
-    let sessionId = this.#loadSessionId(sessionFilePath);
+    let sessionId = this.#loadSession(sessionFilePath, spaceId);
 
     if (sessionId) {
       console.log(`Resuming session: ${sessionId}`);
@@ -244,11 +244,24 @@ export class ImportSessionManager {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   }
 
-  #loadSessionId(sessionFilePath) {
+  #loadSession(sessionFilePath, expectedSpaceId) {
     if (!fs.existsSync(sessionFilePath)) return null;
+    let data;
     try {
-      return JSON.parse(fs.readFileSync(sessionFilePath, "utf8")).session_id;
+      data = JSON.parse(fs.readFileSync(sessionFilePath, "utf8"));
     } catch { return null; }
+
+    if (!data.session_id) return null;
+
+    if (data.space_id && data.space_id !== expectedSpaceId) {
+      console.error(
+        `Error: session file records space ${data.space_id} but you specified ${expectedSpaceId}.\n` +
+        `Run \`funcli import reset ${path.dirname(sessionFilePath)}\` to start fresh, or omit the space ID to resume.`
+      );
+      process.exit(1);
+    }
+
+    return data.session_id;
   }
 
   #saveSessionId(sessionFilePath, data) {
