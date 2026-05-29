@@ -1,6 +1,9 @@
 import fs from "fs";
+import https from "https";
+import http from "http";
 import path from "path";
 import crypto from "crypto";
+import { URL } from "url";
 
 const SESSION_FILE = ".fundamento-session.json";
 const MAX_CONCURRENCY = 5;
@@ -170,19 +173,23 @@ export class ImportSessionManager {
 
   async #uploadFile(entry, filePath, sessionId) {
     const stat = fs.statSync(filePath);
-    const stream = fs.createReadStream(filePath);
-    const uploadRes = await fetch(entry.direct_upload_url, {
-      method: "PUT",
-      headers: {
+    const status = await new Promise((resolve, reject) => {
+      const parsed = new URL(entry.direct_upload_url);
+      const transport = parsed.protocol === "https:" ? https : http;
+      const headers = {
         "Content-Type": entry.content_type || "application/octet-stream",
         "Content-Length": String(stat.size),
         ...entry.direct_upload_headers
-      },
-      body: stream,
-      duplex: "half"
+      };
+      const req = transport.request(
+        { hostname: parsed.hostname, path: parsed.pathname + parsed.search, method: "PUT", headers },
+        (res) => { res.resume(); resolve(res.statusCode); }
+      );
+      req.on("error", reject);
+      fs.createReadStream(filePath).pipe(req);
     });
-    if (!uploadRes.ok) {
-      throw new Error(`Upload failed for ${entry.relative_path}: HTTP ${uploadRes.status}`);
+    if (status < 200 || status >= 300) {
+      throw new Error(`Upload failed for ${entry.relative_path}: HTTP ${status}`);
     }
     await this.client.markFileUploaded(sessionId, entry.id);
   }
