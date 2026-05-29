@@ -169,14 +169,17 @@ export class ImportSessionManager {
   }
 
   async #uploadFile(entry, filePath, sessionId) {
-    const fileBuffer = fs.readFileSync(filePath);
+    const stat = fs.statSync(filePath);
+    const stream = fs.createReadStream(filePath);
     const uploadRes = await fetch(entry.direct_upload_url, {
       method: "PUT",
       headers: {
         "Content-Type": entry.content_type || "application/octet-stream",
+        "Content-Length": String(stat.size),
         ...entry.direct_upload_headers
       },
-      body: fileBuffer
+      body: stream,
+      duplex: "half"
     });
     if (!uploadRes.ok) {
       throw new Error(`Upload failed for ${entry.relative_path}: HTTP ${uploadRes.status}`);
