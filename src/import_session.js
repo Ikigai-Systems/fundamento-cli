@@ -161,7 +161,10 @@ export class ImportSessionManager {
     };
 
     const workers = Array.from({ length: this.concurrency }, worker);
-    await Promise.all(workers);
+    await Promise.all(workers).catch(e => {
+      process.stdout.write("\n");
+      throw e;
+    });
     process.stdout.write("\n");
   }
 
