@@ -182,7 +182,7 @@ export class ImportSessionManager {
         ...entry.direct_upload_headers
       };
       const req = transport.request(
-        { hostname: parsed.hostname, path: parsed.pathname + parsed.search, method: "PUT", headers },
+        { hostname: parsed.hostname, port: parsed.port, path: parsed.pathname + parsed.search, method: "PUT", headers },
         (res) => { res.resume(); resolve(res.statusCode); }
       );
       req.on("error", reject);
