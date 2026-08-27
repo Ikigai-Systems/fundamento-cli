@@ -17,7 +17,7 @@ npm install -g github:Ikigai-Systems/fundamento-cli
 npx github:Ikigai-Systems/fundamento-cli spaces list
 
 # Pin to a released version (any git tag, branch or commit works)
-npm install -g github:Ikigai-Systems/fundamento-cli#v0.2.0
+npm install -g github:Ikigai-Systems/fundamento-cli#v0.2.1
 ```
 
 Requires `git` and Node.js >= 24.11.1.
@@ -77,7 +77,7 @@ env "npm_config_//npm.pkg.github.com/:_authToken=$(gh auth token)" \
 ```
 
 The `latest` dist-tag follows the `v*` git tags (stable releases). Every push to
-`master` additionally publishes a `0.2.0-master.<sha>`-style build under the
+`master` additionally publishes a `0.2.1-master.<sha>`-style build under the
 `prerelease` tag, if you want the newest unreleased code:
 
 ```bash
