@@ -1,5 +1,7 @@
-# Publishes a prerelease build for every green master commit.
-# Stable releases (dist-tag "latest") are published by release.yml on v* tags.
+# Every green commit on master is published to GitHub Packages as the "latest"
+# dist-tag, so `npm install @ikigai-systems/fundamento-cli` always installs the
+# newest master build. There is no manual release step and no version bump commit:
+# major.minor come from package.json, the patch is the number of commits on master.
 name: Publish master to GitHub Packages
 
 on:
@@ -22,6 +24,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch head by default; pin to the
+          # commit that was actually tested, and fetch history to count commits.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v4
@@ -29,16 +36,38 @@ jobs:
           node-version: 24.x
           registry-url: "https://npm.pkg.github.com"
           scope: "@ikigai-systems"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Set version from commit SHA
-        env:
-          GITHUB_SHA: ${{ github.sha }}
-        run: npm version --no-git-tag-version "$(jq -r .version package.json)-master.${GITHUB_SHA::7}"
+      - name: Compute version
+        id: version
+        run: |
+          BASE="$(jq -r .version package.json | cut -d. -f1,2)"
+          PATCH="$(git rev-list --count HEAD)"
+          echo "version=${BASE}.${PATCH}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to GitHub Packages
-        run: npm publish --tag prerelease
+      - name: Skip if this version is already published
+        id: check
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if npm view "@ikigai-systems/fundamento-cli@${VERSION}" version >/dev/null 2>&1; then
+            echo "${VERSION} is already published, skipping."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set version
+        if: steps.check.outputs.published == 'false'
+        run: npm version --no-git-tag-version "${{ steps.version.outputs.version }}"
+
+      # npm publish runs prepublishOnly (npm test), so a failing test blocks the publish.
+      - name: Publish to GitHub Packages
+        if: steps.check.outputs.published == 'false'
+        run: npm publish --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

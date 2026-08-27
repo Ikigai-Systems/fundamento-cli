@@ -16,8 +16,8 @@ npm install -g github:Ikigai-Systems/fundamento-cli
 # Or run without installing
 npx github:Ikigai-Systems/fundamento-cli spaces list
 
-# Pin to a released version (any git tag, branch or commit works)
-npm install -g github:Ikigai-Systems/fundamento-cli#v0.2.1
+# Pin to a specific commit or branch
+npm install -g github:Ikigai-Systems/fundamento-cli#165c0b0
 ```
 
 Requires `git` and Node.js >= 24.11.1.
@@ -76,12 +76,16 @@ env "npm_config_//npm.pkg.github.com/:_authToken=$(gh auth token)" \
   @ikigai-systems/fundamento-cli
 ```
 
-The `latest` dist-tag follows the `v*` git tags (stable releases). Every push to
-`master` additionally publishes a `0.2.1-master.<sha>`-style build under the
-`prerelease` tag, if you want the newest unreleased code:
+#### Versioning
+
+There are no tagged releases. Every commit that lands green on `master` is
+published automatically as the `latest` dist-tag, versioned `0.2.<commits-on-master>`
+(the major and minor come from `package.json`, the patch is the commit count). So
+`npm install` always gives you the newest master build, and `npm update` picks up
+later ones. To pin, install an exact version:
 
 ```bash
-npm install -g @ikigai-systems/fundamento-cli@prerelease
+npm install -g @ikigai-systems/fundamento-cli@0.2.64
 ```
 
 ### From Source
