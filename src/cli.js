@@ -8,6 +8,8 @@ import matter from "gray-matter";
 import fs from "fs";
 import path from "path";
 
+const pkg = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+
 const program = new Command();
 
 // Helper function to wrap action handlers with client initialization and error handling
@@ -30,7 +32,7 @@ function withClient(handler) {
 program
   .name("funcli")
   .description("CLI client for Fundamento Cloud")
-  .version("0.1.0")
+  .version(pkg.version)
   .option("-t, --token <token>", "API token (overrides FUNDAMENTO_API_KEY)")
   .option("-u, --base-url <url>", "Base URL (default: https://fundamento.cloud)");
 
