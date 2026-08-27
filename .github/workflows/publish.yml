@@ -1,3 +1,5 @@
+# Publishes a prerelease build for every green master commit.
+# Stable releases (dist-tag "latest") are published by release.yml on v* tags.
 name: Publish master to GitHub Packages
 
 on:
@@ -7,8 +9,6 @@ on:
       - completed
     branches:
       - master
-    tags:
-      - 'v*'
 
 jobs:
   publish:

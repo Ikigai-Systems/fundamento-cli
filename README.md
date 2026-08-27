@@ -4,17 +4,84 @@ Command line client for [Fundamento Cloud](https://fundamento.cloud) - a modern 
 
 ## Installation
 
-### From GitHub Packages
+### From GitHub (recommended, no authentication)
+
+The repository is public, so npm can install the CLI straight from git without any
+registry configuration or token:
 
 ```bash
-# Configure npm to use GitHub Packages for @ikigai-systems scope
+# Install globally from master
+npm install -g github:Ikigai-Systems/fundamento-cli
+
+# Or run without installing
+npx github:Ikigai-Systems/fundamento-cli spaces list
+
+# Pin to a released version (any git tag, branch or commit works)
+npm install -g github:Ikigai-Systems/fundamento-cli#v0.2.0
+```
+
+Requires `git` and Node.js >= 24.11.1.
+
+### From GitHub Packages (requires a token)
+
+GitHub's npm registry (`npm.pkg.github.com`) requires authentication **even for
+public packages** - an anonymous request returns `401 Unauthorized`. So installing
+from GitHub Packages always needs a token with the `read:packages` scope.
+
+If you use the [GitHub CLI](https://cli.github.com/), make sure your token carries
+that scope (the default `gh auth login` scopes do not include it):
+
+```bash
+gh auth refresh -h github.com -s read:packages
+```
+
+**Option A - store the token in `~/.npmrc` (simplest):**
+
+```bash
 npm config set @ikigai-systems:registry https://npm.pkg.github.com
+npm config set //npm.pkg.github.com/:_authToken "$(gh auth token)"
 
-# Install globally
 npm install -g @ikigai-systems/fundamento-cli
+```
 
-# Or use with npx (no installation needed)
-npx @ikigai-systems/fundamento-cli spaces list
+This writes the token to `~/.npmrc` in plain text; re-run the second command when
+the token is rotated.
+
+**Option B - keep the token out of `~/.npmrc`:**
+
+npm expands `${VAR}` in `.npmrc` from the environment, so the file can stay
+secret-free. Put this in `~/.npmrc`:
+
+```
+@ikigai-systems:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+and export the token in your shell profile (or via direnv, 1Password, etc.):
+
+```bash
+export GITHUB_TOKEN=$(gh auth token)   # or a classic PAT with read:packages
+npm install -g @ikigai-systems/fundamento-cli
+```
+
+If `GITHUB_TOKEN` is unset, npm sends the unexpanded value and the registry answers
+with a confusing `401 ... User cannot be authenticated with the token provided` -
+check that the variable is exported before debugging anything else.
+
+**Option C - one-off install without changing any config:**
+
+```bash
+env "npm_config_//npm.pkg.github.com/:_authToken=$(gh auth token)" \
+  npm install -g --@ikigai-systems:registry=https://npm.pkg.github.com \
+  @ikigai-systems/fundamento-cli
+```
+
+The `latest` dist-tag follows the `v*` git tags (stable releases). Every push to
+`master` additionally publishes a `0.2.0-master.<sha>`-style build under the
+`prerelease` tag, if you want the newest unreleased code:
+
+```bash
+npm install -g @ikigai-systems/fundamento-cli@prerelease
 ```
 
 ### From Source
