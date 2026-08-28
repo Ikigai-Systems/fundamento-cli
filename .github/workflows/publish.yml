@@ -1,8 +1,11 @@
-# Every green commit on master is published to GitHub Packages as the "latest"
-# dist-tag, so `npm install @ikigai-systems/fundamento-cli` always installs the
-# newest master build. There is no manual release step and no version bump commit:
-# major.minor come from package.json, the patch is the number of commits on master.
-name: Publish master to GitHub Packages
+# Publishes the version in package.json to GitHub Packages as the "latest" dist-tag.
+#
+# release-please owns that version: it only changes on a release commit, when the
+# "chore(master): release X.Y.Z" pull request is merged. Ordinary master commits leave
+# it alone, the publish below finds that version already on the registry, and skips.
+# So the registry itself decides what has been released — no commit inspection needed,
+# and re-running the workflow is harmless.
+name: Publish release to GitHub Packages
 
 on:
   workflow_run:
@@ -26,9 +29,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # workflow_run checks out the default branch head by default; pin to the
-          # commit that was actually tested, and fetch history to count commits.
+          # commit that was actually tested.
           ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 0
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v4
@@ -41,29 +43,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Compute version
-        id: version
-        run: |
-          BASE="$(jq -r .version package.json | cut -d. -f1,2)"
-          PATCH="$(git rev-list --count HEAD)"
-          echo "version=${BASE}.${PATCH}" >> "$GITHUB_OUTPUT"
-
-      - name: Skip if this version is already published
+      - name: Check whether this version is already published
         id: check
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
         run: |
+          VERSION="$(jq -r .version package.json)"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           if npm view "@ikigai-systems/fundamento-cli@${VERSION}" version >/dev/null 2>&1; then
-            echo "${VERSION} is already published, skipping."
+            echo "${VERSION} is already published — not a release commit, skipping."
             echo "published=true" >> "$GITHUB_OUTPUT"
           else
+            echo "${VERSION} is new — publishing."
             echo "published=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Set version
-        if: steps.check.outputs.published == 'false'
-        run: npm version --no-git-tag-version "${{ steps.version.outputs.version }}"
 
       # npm publish runs prepublishOnly (npm test), so a failing test blocks the publish.
       - name: Publish to GitHub Packages

@@ -78,15 +78,20 @@ env "npm_config_//npm.pkg.github.com/:_authToken=$(gh auth token)" \
 
 #### Versioning
 
-There are no tagged releases. Every commit that lands green on `master` is
-published automatically as the `latest` dist-tag, versioned `0.2.<commits-on-master>`
-(the major and minor come from `package.json`, the patch is the commit count). So
-`npm install` always gives you the newest master build, and `npm update` picks up
-later ones. To pin, install an exact version:
+Releases follow [semantic versioning](https://semver.org) and are cut from
+`master` automatically. Merged pull requests accumulate into a
+`chore(master): release X.Y.Z` pull request; merging that one publishes the
+version to the `latest` dist-tag, tags the commit, and writes the release notes
+into [CHANGELOG.md](CHANGELOG.md) and a GitHub Release.
+
+`npm install` therefore gives you the newest release, not the newest commit. To
+pin, install an exact version:
 
 ```bash
 npm install -g @ikigai-systems/fundamento-cli@0.2.64
 ```
+
+`funcli --version` reports the installed version.
 
 ### From Source
 
