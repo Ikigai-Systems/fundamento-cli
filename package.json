@@ -1,6 +1,6 @@
 {
   "name": "@ikigai-systems/fundamento-cli",
-  "version": "0.2.1",
+  "version": "0.2.64",
   "description": "Command line client for Fundamento Cloud",
   "type": "module",
   "main": "src/index.js",
