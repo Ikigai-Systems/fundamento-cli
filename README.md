@@ -84,14 +84,8 @@ Releases follow [semantic versioning](https://semver.org) and are cut from
 version to the `latest` dist-tag, tags the commit, and writes the release notes
 into [CHANGELOG.md](CHANGELOG.md) and a GitHub Release.
 
-`npm install` therefore gives you the newest release, not the newest commit. To
-pin, install an exact version:
-
-```bash
-npm install -g @ikigai-systems/fundamento-cli@0.2.64
-```
-
-`funcli --version` reports the installed version.
+So `npm install` gives you the newest release rather than the newest commit, and
+`funcli --version` reports what you have.
 
 ### From Source
 
