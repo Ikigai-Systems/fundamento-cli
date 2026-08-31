@@ -88,7 +88,7 @@ into [CHANGELOG.md](CHANGELOG.md) and a GitHub Release.
 pin, install an exact version:
 
 ```bash
-npm install -g @ikigai-systems/fundamento-cli@0.2.64
+npm install -g @ikigai-systems/fundamento-cli@0.3.0
 ```
 
 `funcli --version` reports the installed version.
