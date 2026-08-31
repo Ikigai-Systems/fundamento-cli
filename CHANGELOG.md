@@ -11,6 +11,18 @@
 > during this period, so these sections are dated rather than numbered, and only
 > user-visible changes are listed.
 
+## [0.3.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.2.64...v0.3.0) (2026-08-31)
+
+
+### Features
+
+* adopt semver releases with an automated changelog ([#1](https://github.com/Ikigai-Systems/fundamento-cli/issues/1)) ([3f9c75d](https://github.com/Ikigai-Systems/fundamento-cli/commit/3f9c75dfb2c5b31ac77abb7620b75b98d49142ff))
+
+
+### Upgrade Notes
+
+* `npm install` now gets the newest release, not the newest commit ([3f9c75d](https://github.com/Ikigai-Systems/fundamento-cli/commit/3f9c75dfb2c5b31ac77abb7620b75b98d49142ff))
+
 ## 2026-08 (pre-release)
 
 ### Bug Fixes
