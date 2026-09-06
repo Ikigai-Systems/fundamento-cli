@@ -221,7 +221,7 @@ export class ImportSessionManager {
   async #pollProgress(sessionId, { timeoutMs = 30 * 60 * 1000 } = {}) {
     process.stdout.write("\nProcessing ");
     const deadline = Date.now() + timeoutMs;
-    while (true) {
+    while (Date.now() < deadline) {
       await new Promise(r => setTimeout(r, 2000));
       const session = await this.client.getImportSession(sessionId);
       const pct = session.total_files > 0
@@ -231,13 +231,11 @@ export class ImportSessionManager {
 
       if (["completed", "partial", "failed"].includes(session.status)) {
         console.log(`\n\n✓ Import ${session.status}  (${session.failed_files} failed, ${session.processed_files} imported)`);
-        break;
-      }
-
-      if (Date.now() >= deadline) {
-        throw new Error(`Import session ${sessionId} did not complete within ${Math.round(timeoutMs / 60000)} minutes`);
+        return;
       }
     }
+
+    throw new Error(`Import session ${sessionId} did not complete within ${Math.round(timeoutMs / 60000)} minutes`);
   }
 
   #progressBar(pct, width = 20) {
