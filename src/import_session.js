@@ -7,9 +7,32 @@ import { URL } from "url";
 
 const SESSION_FILE = ".fundamento-session.json";
 const MAX_CONCURRENCY = 5;
-const DOCUMENT_EXTS = new Set([".md", ".docx", ".odt", ".doc"]);
-const ATTACHMENT_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg",
-  ".pdf", ".mp4", ".mov", ".avi"]);
+// The server has the final say on what each uploaded file is — see ImportFile.classify in
+// fundamento-cloud. These maps only decide what the CLI reports locally, and are kept
+// aligned with it. Note .doc is deliberately absent: Pandoc reads DOCX but not DOC, so a
+// .doc sent as a document can only ever fail.
+const DOCUMENT_FORMATS_BY_EXT = {
+  ".md": "markdown", ".markdown": "markdown", ".docx": "docx", ".odt": "odt"
+};
+
+const ATTACHMENT_FORMATS_BY_EXT = {
+  ".png": "image", ".jpg": "image", ".jpeg": "image", ".gif": "image",
+  ".webp": "image", ".svg": "image", ".bmp": "image", ".ico": "image",
+  ".tif": "image", ".tiff": "image", ".heic": "image",
+  ".pdf": "pdf",
+  ".mp4": "video", ".mov": "video", ".avi": "video", ".mkv": "video",
+  ".webm": "video", ".m4v": "video", ".wmv": "video", ".flv": "video"
+};
+
+// Mirrors ImportFile.classify on the server, which has the final say. Anything we cannot
+// convert into a document is an attachment, so an unrecognised extension is stored rather
+// than failed.
+export function classifyFile(extension) {
+  const documentFormat = DOCUMENT_FORMATS_BY_EXT[extension];
+  if (documentFormat) return { format: documentFormat, file_type: "document" };
+
+  return { format: ATTACHMENT_FORMATS_BY_EXT[extension] || "other", file_type: "attachment" };
+}
 
 export class ImportSessionManager {
   constructor(client, options = {}) {
@@ -121,11 +144,14 @@ export class ImportSessionManager {
       if (entry.isDirectory()) {
         results.push(...this.#scanDirectory(fullPath, relativePath));
       } else if (entry.isFile()) {
-        const ext = path.extname(entry.name).toLowerCase();
-        if (DOCUMENT_EXTS.has(ext) || ATTACHMENT_EXTS.has(ext)) {
-          const stat = fs.statSync(fullPath);
-          results.push({ fullPath, relativePath, size: stat.size, ext });
-        }
+        // Everything that survives #shouldIgnore is sent. This used to keep only known
+        // extensions, which silently dropped .csv, .txt, .xlsx, .pptx and .m4a from the
+        // import — the user was never told their files had not arrived.
+        const stat = fs.statSync(fullPath);
+        results.push({
+          fullPath, relativePath, size: stat.size,
+          ext: path.extname(entry.name).toLowerCase()
+        });
       }
     }
     return results;
@@ -134,13 +160,11 @@ export class ImportSessionManager {
   async #buildManifest(files) {
     return Promise.all(files.map(async (f) => {
       const checksum = await this.#md5Base64(f.fullPath);
-      const ext = f.ext.slice(1);
       return {
         relative_path: f.relativePath,
         checksum,
         file_size: f.size,
-        format: this.#detectFormat(ext),
-        file_type: ATTACHMENT_EXTS.has(f.ext) ? "attachment" : "document"
+        ...classifyFile(f.ext)
       };
     }));
   }
@@ -241,14 +265,6 @@ export class ImportSessionManager {
       stream.on("end", () => resolve(hash.digest("base64")));
       stream.on("error", reject);
     });
-  }
-
-  #detectFormat(ext) {
-    const map = { md: "markdown", docx: "docx", odt: "odt", doc: "doc",
-      png: "image", jpg: "image", jpeg: "image", gif: "image",
-      webp: "image", svg: "image", pdf: "pdf",
-      mp4: "video", mov: "video", avi: "video" };
-    return map[ext] || "other";
   }
 
   #formatBytes(bytes) {
