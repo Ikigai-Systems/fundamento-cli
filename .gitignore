@@ -10,3 +10,5 @@ yarn-error.log*
 coverage/
 dist/
 tmp/
+# Per-project Claude Code local settings (autoMode env profile) — never commit
+.claude/settings.local.json
