@@ -2,7 +2,6 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { Config } from "./config.js";
 import { FundamentoClient } from "./client.js";
-import { DirectoryImporter } from "./importer.js";
 import { ImportSessionManager } from "./import_session.js";
 import matter from "gray-matter";
 import fs from "fs";
@@ -225,52 +224,6 @@ documentsCommand
 
       console.log(chalk.green("✓") + " Document created successfully!");
       console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
-    }
-  }));
-
-documentsCommand
-  .command("import <space-id> <directory>")
-  .description("Import all markdown files from a directory, maintaining hierarchy")
-  .action(withClient(async (client, spaceId, directory) => {
-    // Validate directory exists
-    if (!fs.existsSync(directory)) {
-      console.error(chalk.red("Error:"), `Directory not found: ${directory}`);
-      process.exit(1);
-    }
-
-    if (!fs.statSync(directory).isDirectory()) {
-      console.error(chalk.red("Error:"), `Path is not a directory: ${directory}`);
-      process.exit(1);
-    }
-
-    console.log(chalk.blue("Starting import from:"), directory);
-    console.log(chalk.blue("Target space:"), spaceId);
-    console.log();
-
-    const importer = new DirectoryImporter(client, spaceId);
-    const results = await importer.importDirectory(directory);
-
-    console.log();
-    console.log(chalk.bold("Import Summary:"));
-    console.log(chalk.green(`✓ Successful: ${results.successful}`));
-    if (results.failed > 0) {
-      console.log(chalk.red(`✗ Failed: ${results.failed}`));
-    }
-    if (results.skipped > 0) {
-      console.log(chalk.yellow(`⊘ Skipped: ${results.skipped}`));
-    }
-    console.log(chalk.gray(`  Total processed: ${results.total}`));
-
-    // Show details if there were failures
-    if (results.failed > 0) {
-      console.log();
-      console.log(chalk.bold("Failed imports:"));
-      results.documents
-        .filter(d => d.error)
-        .forEach(d => {
-          console.log(chalk.red(`  ✗ ${d.path}`));
-          console.log(chalk.gray(`    ${d.error}`));
-        });
     }
   }));
 

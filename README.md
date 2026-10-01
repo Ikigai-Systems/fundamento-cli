@@ -433,77 +433,55 @@ funcli documents update abc123 updated-content.md
 - Tags from frontmatter replace existing tags
 - Does not change document title or hierarchy position
 
-#### Import documents from directory
+### Import
+
+Imports a whole directory - markdown, Word/OpenOffice files, images, PDFs and any other
+attachments - into a space. Files are uploaded first and then processed on the server, so
+large directories can be resumed if the upload is interrupted.
+
+#### Start an import
 
 ```bash
-funcli documents import <space-id> <directory>
+funcli import start <space-id> <directory>
 ```
 
-Imports all markdown files from a directory, maintaining the folder hierarchy as nested documents.
-
-**Arguments:**
-- `<space-id>` - Space ID where documents will be imported
-- `<directory>` - Path to directory containing markdown files
+**Options:**
+- `-f, --format <format>` - Source format: `generic` or `obsidian` (auto-detected: a directory containing `.obsidian/` is treated as an Obsidian vault)
+- `-c, --concurrency <n>` - Number of parallel uploads (default: 5)
+- `--ignore <pattern>` - Glob pattern of names to skip (repeatable). Hidden files and folders (starting with `.`) are always skipped
+- `--session-file <path>` - Where to keep the resume file (default: `<directory>/.fundamento-session.json`)
 
 **Behavior:**
-- Recursively traverses the directory
-- Creates a document for each subdirectory (using directory name as title)
-- Creates a document for each `.md` file (with full content)
-- Maintains parent-child relationships based on folder structure
-- Skips non-markdown files (`.png`, `.jpg`, `.pdf`, etc.)
-- Processes frontmatter in markdown files
+- Each folder becomes a document, and the files inside it become its children
+- Siblings are ordered folders first, then alphabetically - the same as the source directory
+- `.md`/`.markdown`, `.docx` and `.odt` files become documents; frontmatter `title` and `tags` are applied
+- Every other file is stored as an attachment
+- `[[wiki links]]`, embeds and links to local images and files are turned into links to the imported documents and attachments
+- Documents are created at the space root; importing under an existing document is not supported
 
-**Directory Structure Example:**
-
-```
-Notes/
-├── README.md
-├── Projects/
-│   ├── Project A.md
-│   └── Project B.md
-└── Ideas/
-    └── Future Ideas.md
-```
-
-**Result:** Creates documents with this hierarchy:
-- README (root level)
-- Projects (root level)
-  - Project A (child of Projects)
-  - Project B (child of Projects)
-- Ideas (root level)
-  - Future Ideas (child of Ideas)
-
-**Examples:**
+**Example:**
 
 ```bash
-# Import entire directory
-funcli documents import z2zK66AaEF ./my-notes
-
-# Import with relative path
-funcli documents import z2zK66AaEF ../documentation
-
-# Import with absolute path
-funcli documents import z2zK66AaEF /home/user/Documents/notes
+funcli import start z2zK66AaEF ./my-notes
 ```
 
-**Output:**
+Running `import start` again on the same directory resumes the previous session rather than
+creating a second copy. To import the directory afresh, reset it first:
 
-```
-Starting import from: ./my-notes
-Target space: z2zK66AaEF
-
-Import Summary:
-✓ Successful: 15
-⊘ Skipped: 3
-  Total processed: 15
+```bash
+funcli import reset ./my-notes
 ```
 
-**Notes:**
-- Large directories may take some time to import
-- Failed imports will be reported with error details
-- Non-markdown files are automatically skipped
-- Folder names become document titles
-- File names (without `.md`) become document titles
+#### Manage an import
+
+Each command takes either the session ID or the imported directory:
+
+```bash
+funcli import status ./my-notes            # progress summary
+funcli import log ./my-notes --failed-only # file-by-file results (add --json for JSON)
+funcli import retry ./my-notes             # retry failed files
+funcli import cancel ./my-notes            # cancel and remove the session file
+```
 
 ## Examples
 
