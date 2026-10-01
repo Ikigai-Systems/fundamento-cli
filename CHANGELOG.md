@@ -11,6 +11,24 @@
 > during this period, so these sections are dated rather than numbered, and only
 > user-visible changes are listed.
 
+## [0.4.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.3.0...v0.4.0) (2026-10-01)
+
+
+### ⚠ BREAKING CHANGES
+
+* **import:** use `funcli import start <space-id> <directory>`. <!-- changelog:end -->
+
+### Features
+
+* **import:** remove documents import command ([#8](https://github.com/Ikigai-Systems/fundamento-cli/issues/8)) ([aedfc85](https://github.com/Ikigai-Systems/fundamento-cli/commit/aedfc85082fcf108f28986cb1d64f6f02fa8107e))
+
+
+### Bug Fixes
+
+* documents create applies tags from frontmatter ([#9](https://github.com/Ikigai-Systems/fundamento-cli/issues/9)) ([cab4fca](https://github.com/Ikigai-Systems/fundamento-cli/commit/cab4fcae301c38c5ef52092ae1e574b340a2493b))
+* **import:** let the server decide what each uploaded file is ([#4](https://github.com/Ikigai-Systems/fundamento-cli/issues/4)) ([9761b38](https://github.com/Ikigai-Systems/fundamento-cli/commit/9761b380d6660b849df36947c9b4e3a2a070596a))
+* **import:** retry uploads after a dropped connection or server error ([#7](https://github.com/Ikigai-Systems/fundamento-cli/issues/7)) ([b7495a7](https://github.com/Ikigai-Systems/fundamento-cli/commit/b7495a76f30f0e22e4bcf0909b7ce888c38f15c7))
+
 ## [0.3.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.2.64...v0.3.0) (2026-08-31)
 
 
