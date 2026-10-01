@@ -1,6 +1,9 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert";
-import { createTestClient, uniqueName } from "./helpers.js";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { createTestClient, uniqueName, runCli } from "./helpers.js";
 
 describe("documents", () => {
   let client;
@@ -111,5 +114,22 @@ describe("documents", () => {
         "child should appear under parent in hierarchy"
       );
     }
+  });
+
+  it("applies frontmatter tags when creating a document from the CLI", async () => {
+    const title = uniqueName("cli-tags");
+    const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "funcli-")), "doc.md");
+    fs.writeFileSync(file, `---\ntitle: ${title}\ntags:\n  - cli/frontmatter\n---\n# Tagged\n`);
+
+    const { stdout, exitCode } = await runCli("documents", "create", testSpaceId, file);
+    assert.strictEqual(exitCode, 0);
+
+    const id = stdout.match(/\(([^)]+)\)\s*$/m)[1];
+    const doc = await client.getDocument(id, "json");
+    assert.strictEqual(doc.title, title);
+    assert.deepStrictEqual(doc.tags, ["#cli/frontmatter"]);
+
+    const content = await client.getDocument(id, "markdown");
+    assert(!content.includes("tags:"), "frontmatter should not end up in the document body");
   });
 });
