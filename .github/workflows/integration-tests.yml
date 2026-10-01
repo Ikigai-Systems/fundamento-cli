@@ -61,6 +61,10 @@ jobs:
           summary: true
           detailed_summary: true
           fail_on_failure: true
+          # A cancelled or hung run leaves no report, and the action would otherwise post
+          # a passing check for it.
+          require_tests: true
+          fail_on_parse_error: true
 
       - name: Stop test stack
         if: always()

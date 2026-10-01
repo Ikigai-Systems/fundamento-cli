@@ -9,6 +9,9 @@ on:
 jobs:
   run-tests:
     runs-on: ubuntu-latest
+    # A normal run takes about a minute. Without a limit a hung step runs to GitHub's
+    # 6-hour default.
+    timeout-minutes: 10
     if: "!contains(github.event.head_commit.message, '[skip-tests]')"
 
     permissions:
@@ -55,3 +58,7 @@ jobs:
           summary: true
           detailed_summary: true
           fail_on_failure: true
+          # A cancelled or hung run leaves no report, and the action would otherwise post
+          # a passing check for it.
+          require_tests: true
+          fail_on_parse_error: true
