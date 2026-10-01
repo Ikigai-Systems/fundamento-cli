@@ -4,7 +4,7 @@ import { Config } from "./config.js";
 import { FundamentoClient } from "./client.js";
 import { DirectoryImporter } from "./importer.js";
 import { ImportSessionManager } from "./import_session.js";
-import matter from "gray-matter";
+import { prepareMarkdownDocument } from "./markdown_document.js";
 import fs from "fs";
 import path from "path";
 
@@ -192,7 +192,7 @@ documentsCommand
       console.log(chalk.green("✓") + " Document created successfully from file!");
       console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
     } else {
-      // Markdown path - parse frontmatter
+      // Markdown path - frontmatter supplies title, parent and tags
       let content;
       if (file) {
         content = fs.readFileSync(file, "utf8");
@@ -201,27 +201,11 @@ documentsCommand
         content = await readStdin();
       }
 
-      // Parse frontmatter
-      const { data: frontmatter, content: markdown } = matter(content);
-
-      // Determine title (priority: CLI arg > frontmatter > filename > "Untitled")
-      let title = options.title || frontmatter.title;
-      if (!title && file) {
-        title = path.basename(file, path.extname(file));
-      }
-      if (!title) {
-        title = "Untitled";
-      }
-
-      // Determine parent (priority: CLI arg > frontmatter)
-      const parentDocumentId = options.parent || frontmatter.parentId;
-
-      // Create document from markdown
-      const document = await client.createDocument(spaceId, {
-        title,
-        markdown,
-        parentDocumentId
-      });
+      const document = await client.createDocument(spaceId, prepareMarkdownDocument(content, {
+        title: options.title,
+        parent: options.parent,
+        file
+      }));
 
       console.log(chalk.green("✓") + " Document created successfully!");
       console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
