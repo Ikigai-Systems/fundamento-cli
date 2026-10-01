@@ -300,10 +300,15 @@ You can include metadata in your markdown file using YAML frontmatter:
 ---
 title: My Document Title
 parentId: abc123
+tags:
+  - project/alpha
+  - status/draft
 ---
 
 # Document content starts here
 ```
+
+Tags listed in the frontmatter are added to the new document.
 
 **Title Resolution Priority:**
 1. CLI option (`--title`)
