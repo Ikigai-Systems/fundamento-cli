@@ -34,6 +34,50 @@ export function classifyFile(extension) {
   return { format: ATTACHMENT_FORMATS_BY_EXT[extension] || "other", file_type: "attachment" };
 }
 
+const UPLOAD_ATTEMPTS = 3;
+// "socket hang up" surfaces as ECONNRESET.
+const RETRYABLE_ERRORS = new Set(["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "EPIPE"]);
+
+// PUTs a file to a direct-upload URL. One failed upload aborts the whole import, so a dropped
+// connection or a 5xx (e.g. S3's 503 SlowDown) is retried with a growing pause first.
+export async function putFile(url, filePath, headers, { attempts = UPLOAD_ATTEMPTS, backoffMs = 1000 } = {}) {
+  for (let attempt = 1; ; attempt++) {
+    let error;
+    try {
+      const status = await putOnce(url, filePath, headers);
+      if (status >= 200 && status < 300) return;
+      error = new Error(`HTTP ${status}`);
+      error.retryable = status >= 500;
+    } catch (e) {
+      error = e;
+      error.retryable = RETRYABLE_ERRORS.has(e.code);
+    }
+    if (!error.retryable || attempt >= attempts) throw error;
+    await new Promise(r => setTimeout(r, attempt * backoffMs));
+  }
+}
+
+function putOnce(url, filePath, headers) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const transport = parsed.protocol === "https:" ? https : http;
+    const stream = fs.createReadStream(filePath);
+    const req = transport.request(
+      {
+        hostname: parsed.hostname, port: parsed.port, path: parsed.pathname + parsed.search, method: "PUT",
+        headers: { ...headers, "Content-Length": String(fs.statSync(filePath).size) },
+        // A fresh socket per upload: a pooled keep-alive socket the server has already
+        // closed fails the next request with "socket hang up".
+        agent: false
+      },
+      (res) => { res.resume(); resolve(res.statusCode); }
+    );
+    req.on("error", err => { stream.destroy(); reject(err); });
+    stream.on("error", err => { req.destroy(); reject(err); });
+    stream.pipe(req);
+  });
+}
+
 export class ImportSessionManager {
   constructor(client, options = {}) {
     this.client = client;
@@ -196,24 +240,14 @@ export class ImportSessionManager {
   }
 
   async #uploadFile(entry, filePath, sessionId) {
-    const stat = fs.statSync(filePath);
-    const status = await new Promise((resolve, reject) => {
-      const parsed = new URL(entry.direct_upload_url);
-      const transport = parsed.protocol === "https:" ? https : http;
-      const headers = {
-        "Content-Type": entry.content_type || "application/octet-stream",
-        "Content-Length": String(stat.size),
-        ...entry.direct_upload_headers
-      };
-      const req = transport.request(
-        { hostname: parsed.hostname, port: parsed.port, path: parsed.pathname + parsed.search, method: "PUT", headers },
-        (res) => { res.resume(); resolve(res.statusCode); }
-      );
-      req.on("error", reject);
-      fs.createReadStream(filePath).pipe(req);
-    });
-    if (status < 200 || status >= 300) {
-      throw new Error(`Upload failed for ${entry.relative_path}: HTTP ${status}`);
+    const headers = {
+      "Content-Type": entry.content_type || "application/octet-stream",
+      ...entry.direct_upload_headers
+    };
+    try {
+      await putFile(entry.direct_upload_url, filePath, headers);
+    } catch (e) {
+      throw new Error(`Upload failed for ${entry.relative_path}: ${e.message}`, { cause: e });
     }
     await this.client.markFileUploaded(sessionId, entry.id);
   }
