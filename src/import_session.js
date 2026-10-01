@@ -247,7 +247,7 @@ export class ImportSessionManager {
     try {
       await putFile(entry.direct_upload_url, filePath, headers);
     } catch (e) {
-      throw new Error(`Upload failed for ${entry.relative_path}: ${e.message}`);
+      throw new Error(`Upload failed for ${entry.relative_path}: ${e.message}`, { cause: e });
     }
     await this.client.markFileUploaded(sessionId, entry.id);
   }
