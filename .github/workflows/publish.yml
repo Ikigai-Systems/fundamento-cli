@@ -21,7 +21,12 @@ jobs:
     # A normal run takes about a minute; npm publish re-runs the tests via prepublishOnly.
     timeout-minutes: 10
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'skipped' }}
+    # `branches: [master]` matches the head branch name only, so a pull request from a
+    # fork's own `master` branch triggers this too. Publish only for pushes to this repo.
+    if: >-
+      ${{ github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'skipped') }}
 
     permissions:
       contents: read
@@ -33,6 +38,7 @@ jobs:
           # workflow_run checks out the default branch head by default; pin to the
           # commit that was actually tested.
           ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
       - name: Use Node.js 24.x
         uses: actions/setup-node@v4
