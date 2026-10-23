@@ -33,7 +33,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # workflow_run checks out the default branch head by default; pin to the
           # commit that was actually tested.
