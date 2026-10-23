@@ -11,6 +11,13 @@
 > during this period, so these sections are dated rather than numbered, and only
 > user-visible changes are listed.
 
+## [0.4.1](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.4.0...v0.4.1) (2026-10-23)
+
+
+### Security
+
+* prevent forked pull requests from triggering npm publish ([#11](https://github.com/Ikigai-Systems/fundamento-cli/issues/11)) ([b200fa1](https://github.com/Ikigai-Systems/fundamento-cli/commit/b200fa186b4e78d97ac1cd0b0e7c55403386728a))
+
 ## [0.4.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.3.0...v0.4.0) (2026-10-01)
 
 
