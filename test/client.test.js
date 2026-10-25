@@ -256,3 +256,60 @@ test("FundamentoClient createDocument with markdown should use JSON", async () =
   // Restore original post
   client.axios.post = originalPost;
 });
+
+test("FundamentoClient updateDocument sends only the fields given", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedData;
+  client.axios.patch = async (url, data) => {
+    capturedData = data;
+    return { data: { id: "doc123", title: "Renamed" } };
+  };
+
+  await client.updateDocument("doc123", { title: "Renamed" });
+  assert.deepStrictEqual(capturedData, { document: { title: "Renamed" } });
+
+  await client.updateDocument("doc123", { icon: "" });
+  assert.deepStrictEqual(capturedData, { document: { icon: "" } });
+});
+
+test("FundamentoClient updateTable should format request correctly", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedUrl, capturedData;
+  client.axios.patch = async (url, data) => {
+    capturedUrl = url;
+    capturedData = data;
+    return { data: { id: "table123", name: "KPIs" } };
+  };
+
+  await client.updateTable("table123", { name: "KPIs", icon: "📊" });
+
+  assert.strictEqual(capturedUrl, "/api/v1/tables/table123");
+  assert.deepStrictEqual(capturedData, { table: { name: "KPIs", icon: "📊" } });
+});
+
+test("FundamentoClient createDocument sends the icon", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedData;
+  client.axios.post = async (url, data) => {
+    capturedData = data;
+    return { data: { id: "doc123" } };
+  };
+
+  await client.createDocument("space123", { title: "Roadmap", icon: "🗺️", markdown: "Plans" });
+
+  assert.deepStrictEqual(capturedData, { document: { title: "Roadmap", icon: "🗺️", markdown: "Plans" } });
+});
+
+test("FundamentoClient reports validation errors keyed by field", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  client.axios.defaults.adapter = async () => {
+    const error = new Error("Request failed");
+    error.response = { status: 422, statusText: "Unprocessable Content", data: { errors: { base: "Icon must be a single emoji" } } };
+    throw error;
+  };
+
+  await assert.rejects(
+    client.updateTable("table123", { icon: "chart" }),
+    { message: "API Error (422): Icon must be a single emoji" }
+  );
+});

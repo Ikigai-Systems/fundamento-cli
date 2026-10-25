@@ -136,7 +136,7 @@ documentsCommand
       console.log(chalk.bold("\nDocuments:\n"));
 
       for (const doc of documents) {
-        console.log(chalk.cyan(doc.title) + chalk.gray(` (${doc.id})`));
+        console.log(chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.id})`));
       }
 
       console.log();
@@ -163,6 +163,7 @@ documentsCommand
   .argument("[file]", "File to upload (markdown, .docx, .doc, .odt, etc.) or omit to read markdown from stdin")
   .option("-p, --parent <id>", "Parent document ID (for nested documents)")
   .option("-t, --title <title>", "Document title (overrides frontmatter)")
+  .option("-i, --icon <emoji>", "Document icon, a single emoji")
   .action(withClient(async (client, spaceId, file, options) => {
     // Determine if this is a file upload (Word/OpenOffice) or markdown content
     const fileUploadExtensions = [".docx", ".doc", ".odt", ".rtf", ".txt"];
@@ -184,12 +185,13 @@ documentsCommand
       // Create document from file
       const document = await client.createDocument(spaceId, {
         title,
+        icon: options.icon,
         parentDocumentId: options.parent,
         file
       });
 
       console.log(chalk.green("✓") + " Document created successfully from file!");
-      console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
+      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
     } else {
       // Markdown path - frontmatter supplies title, parent and tags
       let content;
@@ -200,38 +202,73 @@ documentsCommand
         content = await readStdin();
       }
 
-      const document = await client.createDocument(spaceId, prepareMarkdownDocument(content, {
-        title: options.title,
-        parent: options.parent,
-        file
-      }));
+      const document = await client.createDocument(spaceId, {
+        ...prepareMarkdownDocument(content, {
+          title: options.title,
+          parent: options.parent,
+          file
+        }),
+        icon: options.icon
+      });
 
       console.log(chalk.green("✓") + " Document created successfully!");
-      console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
+      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
     }
   }));
 
 documentsCommand
   .command("update <id>")
-  .description("Update a document from markdown file or stdin")
-  .argument("[file]", "Markdown file (omit to read from stdin)")
-  .action(withClient(async (client, id, file) => {
-    // Read content from file or stdin
+  .description("Rename a document, change its icon, or replace its content from a markdown file or stdin")
+  .argument("[file]", "Markdown file, or - for stdin (stdin is read by default when no --title or --icon is given)")
+  .option("-t, --title <title>", "New document title")
+  .option("-i, --icon <emoji>", "New document icon, a single emoji")
+  .option("--no-icon", "Remove the document's icon")
+  .action(withClient(async (client, id, file, options) => {
+    const title = options.title;
+    const icon = iconOption(options);
+
+    // Content comes from the file or stdin. A bare rename or icon change must not sit
+    // waiting on stdin, so stdin is then only read when asked for with "-".
     let content;
-    if (file) {
+    if (file && file !== "-") {
       content = fs.readFileSync(file, "utf8");
-    } else {
-      // Read from stdin
+    } else if (file === "-" || (title === undefined && icon === undefined)) {
       content = await readStdin();
     }
 
-    // Update document
     const document = await client.updateDocument(id, {
+      title,
+      icon,
       markdown: content
     });
 
     console.log(chalk.green("✓") + " Document updated successfully!");
-    console.log(chalk.bold(document.title) + chalk.gray(` (${document.id})`));
+    console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
+  }));
+
+const tablesCommand = program
+  .command("tables")
+  .description("Manage tables");
+
+tablesCommand
+  .command("update <id>")
+  .description("Rename a table or change its icon")
+  .option("-n, --name <name>", "New table name (must be unique within the space)")
+  .option("-i, --icon <emoji>", "New table icon, a single emoji")
+  .option("--no-icon", "Remove the table's icon")
+  .action(withClient(async (client, id, options) => {
+    const name = options.name;
+    const icon = iconOption(options);
+
+    if (name === undefined && icon === undefined) {
+      console.error(chalk.red("Error:"), "Provide --name, --icon or --no-icon");
+      process.exit(1);
+    }
+
+    const table = await client.updateTable(id, { name, icon });
+
+    console.log(chalk.green("✓") + " Table updated successfully!");
+    console.log(chalk.bold(withIcon(table, table.name)) + chalk.gray(` (${table.id})`));
   }));
 
 const formulasCommand = program
@@ -382,6 +419,18 @@ importCommand
     }
   });
 
+// Commander turns --icon <emoji> into a string and --no-icon into false, and leaves
+// the option out when neither is given. The API takes "" to remove an icon.
+function iconOption(options) {
+  if (options.icon === false) return "";
+  return options.icon;
+}
+
+// The API returns the icon separately from the title, as { type, value }.
+function withIcon(item, label) {
+  return item.icon?.value ? `${item.icon.value} ${label}` : label;
+}
+
 function collect(value, previous) {
   return previous.concat([value]);
 }
@@ -391,7 +440,7 @@ function printDocumentTree(documents, level) {
 
   for (const doc of documents) {
     // Note: nested documents from spaces#show use `npi` as the field name
-    console.log(indent + chalk.cyan(doc.title) + chalk.gray(` (${doc.npi})`));
+    console.log(indent + chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.npi})`));
 
     if (doc.children && doc.children.length > 0) {
       printDocumentTree(doc.children, level + 1);

@@ -21,7 +21,7 @@ export class FundamentoClient {
           const errors = data?.errors;
           const message = data?.error
             || data?.message
-            || (Array.isArray(errors) ? errors.join(", ") : null)
+            || errorMessages(errors)
             || error.response.statusText;
           throw new Error(`API Error (${error.response.status}): ${message}`);
         }
@@ -72,13 +72,16 @@ export class FundamentoClient {
     return response.data;
   }
 
-  async createDocument(spaceId, { title, markdown, parentDocumentId, file }) {
+  async createDocument(spaceId, { title, icon, markdown, parentDocumentId, file }) {
     if (file) {
       // Use multipart form data for file uploads
       const formData = new FormData();
       formData.append("document[file]", fs.createReadStream(file));
       if (title) {
         formData.append("document[title]", title);
+      }
+      if (icon) {
+        formData.append("document[icon]", icon);
       }
       if (parentDocumentId) {
         formData.append("document[parent_document_id]", parentDocumentId);
@@ -95,11 +98,12 @@ export class FundamentoClient {
     } else {
       // Use JSON for markdown content
       const response = await this.axios.post("/api/v1/documents", {
-        document: {
+        document: withoutUndefined({
           title,
+          icon,
           markdown,
           parent_document_id: parentDocumentId
-        }
+        })
       }, {
         params: { space_id: spaceId }
       });
@@ -107,11 +111,19 @@ export class FundamentoClient {
     }
   }
 
-  async updateDocument(id, { markdown }) {
+  // Any of title, icon and markdown; the ones left undefined stay as they are.
+  // An icon of "" removes it.
+  async updateDocument(id, { title, icon, markdown }) {
     const response = await this.axios.patch(`/api/v1/documents/${id}`, {
-      document: {
-        markdown
-      }
+      document: withoutUndefined({ title, icon, markdown })
+    });
+    return response.data;
+  }
+
+  // Either or both of name and icon; an icon of "" removes it.
+  async updateTable(id, { name, icon }) {
+    const response = await this.axios.patch(`/api/v1/tables/${id}`, {
+      table: withoutUndefined({ name, icon })
     });
     return response.data;
   }
@@ -165,4 +177,15 @@ export class FundamentoClient {
     });
     return response.data;
   }
+}
+
+// Validation errors come as a list of messages or as an object of them keyed by field.
+function errorMessages(errors) {
+  if (Array.isArray(errors)) return errors.join(", ");
+  if (errors && typeof errors === "object") return Object.values(errors).flat().join(", ");
+  return null;
+}
+
+function withoutUndefined(object) {
+  return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== undefined));
 }
