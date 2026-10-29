@@ -119,6 +119,38 @@ spacesCommand
     console.log(chalk.bold(space.name) + chalk.gray(` (${space.id})`));
   }));
 
+program
+  .command("search [query]")
+  .description("Search documents and tables by title, tags, space and update time")
+  .option("--type <type>", "Only documents or tables (document|table, can be repeated)", collect, [])
+  .option("--tag <tag>", "Only objects with this tag; all given tags must match (can be repeated)", collect, [])
+  .option("-s, --space <id>", "Only search in this space")
+  .option("--updated-after <date>", "Only objects updated at or after this ISO 8601 date or time")
+  .option("--updated-before <date>", "Only objects updated at or before this ISO 8601 date or time")
+  .option("-l, --limit <n>", "Results per page, up to 100 (default: 25)", parseInt)
+  .option("--offset <n>", "Results to skip, for paging", parseInt)
+  .option("-j, --json", "Output as JSON")
+  .action(withClient(async (client, query, options) => {
+    const types = options.type.map(searchObjectType);
+
+    const result = await client.search({
+      query,
+      types,
+      tags: options.tag,
+      spaceId: options.space,
+      updatedAfter: options.updatedAfter,
+      updatedBefore: options.updatedBefore,
+      limit: options.limit,
+      offset: options.offset
+    });
+
+    if (options.json) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      printSearchResults(result);
+    }
+  }));
+
 const documentsCommand = program
   .command("documents")
   .description("Manage documents");
@@ -384,6 +416,40 @@ importCommand
 
 function collect(value, previous) {
   return previous.concat([value]);
+}
+
+function searchObjectType(type) {
+  const objectType = { document: "Document", table: "Table" }[type.toLowerCase()];
+
+  if (!objectType) {
+    throw new Error(`Unknown --type "${type}": use document or table`);
+  }
+
+  return objectType;
+}
+
+function printSearchResults({ total, offset, objects }) {
+  if (objects.length === 0) {
+    console.log(chalk.gray("\nNothing found.\n"));
+    return;
+  }
+
+  console.log();
+
+  for (const object of objects) {
+    const tags = object.tags.length ? chalk.gray(` ${object.tags.join(" ")}`) : "";
+
+    console.log(
+      chalk.cyan(object.title)
+      + chalk.gray(` (${object.object_type.toLowerCase()} ${object.id})`)
+      + tags
+    );
+  }
+
+  const last = offset + objects.length;
+  const more = last < total ? `, use --offset ${last} for the next page` : "";
+
+  console.log(chalk.gray(`\n${objects.length} of ${total} result(s)${more}\n`));
 }
 
 function printDocumentTree(documents, level) {
