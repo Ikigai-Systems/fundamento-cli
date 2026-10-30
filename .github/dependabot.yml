@@ -1,14 +1,36 @@
 version: 2
 
 # Commits use the `deps` prefix, which release-please-config.json marks hidden, so
-# these updates stay out of CHANGELOG.md.
+# these updates stay out of CHANGELOG.md. Bot pull requests are also skipped by the
+# changelog entry job in .github/workflows/changelog.yml.
 updates:
+  - package-ecosystem: npm
+    commit-message:
+      prefix: deps
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Keep the ESLint toolchain bumping together so a partial bump can't create
+      # an unresolvable peer-dependency conflict.
+      eslint:
+        patterns:
+          - "eslint"
+          - "@eslint/*"
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+
   - package-ecosystem: github-actions
     commit-message:
       prefix: deps
     directory: "/"
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]
     # Third-party actions are pinned to commit SHAs; Dependabot bumps the SHA and its
     # version comment. A week's wait means a hijacked release is usually caught before
     # it is proposed here.
