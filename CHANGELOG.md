@@ -11,6 +11,24 @@
 > during this period, so these sections are dated rather than numbered, and only
 > user-visible changes are listed.
 
+## [0.5.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.4.0...v0.5.0) (2026-10-30)
+
+
+### Features
+
+* funcli search finds documents and tables ([#19](https://github.com/Ikigai-Systems/fundamento-cli/issues/19)) ([af58b26](https://github.com/Ikigai-Systems/fundamento-cli/commit/af58b2615a59807fde34d8f668316cf80b2555f3))
+* rename documents and tables, and set their icons ([#18](https://github.com/Ikigai-Systems/fundamento-cli/issues/18)) ([1d1990e](https://github.com/Ikigai-Systems/fundamento-cli/commit/1d1990eba12a83c47dbb055f1e559c04948f13ac))
+
+
+### Bug Fixes
+
+* show API validation messages instead of the HTTP status ([1d1990e](https://github.com/Ikigai-Systems/fundamento-cli/commit/1d1990eba12a83c47dbb055f1e559c04948f13ac))
+
+
+### Security
+
+* prevent forked pull requests from triggering npm publish ([#11](https://github.com/Ikigai-Systems/fundamento-cli/issues/11)) ([b200fa1](https://github.com/Ikigai-Systems/fundamento-cli/commit/b200fa186b4e78d97ac1cd0b0e7c55403386728a))
+
 ## [0.4.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.3.0...v0.4.0) (2026-10-01)
 
 
