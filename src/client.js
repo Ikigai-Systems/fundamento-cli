@@ -67,6 +67,22 @@ export class FundamentoClient {
     return response.data;
   }
 
+  async search({ query, types, tags, spaceId, updatedAfter, updatedBefore, limit, offset } = {}) {
+    const response = await this.axios.get("/api/v1/search", {
+      params: {
+        query,
+        object_types: types?.length ? types : undefined,
+        tags: tags?.length ? tags : undefined,
+        space_id: spaceId,
+        updated_after: updatedAfter,
+        updated_before: updatedBefore,
+        limit,
+        offset
+      }
+    });
+    return response.data;
+  }
+
   async getDocument(id, format = "markdown") {
     const response = await this.axios.get(`/api/v1/documents/${id}.${format}`);
     return response.data;
