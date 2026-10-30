@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+// quiet: dotenv 17+ logs a line on every load, which would pollute CLI output.
+dotenv.config({ quiet: true });
 
 export class Config {
   constructor(options = {}) {
