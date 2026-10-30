@@ -229,6 +229,30 @@ funcli spaces create "Restricted Space" -a restricted
 
 **Note:** When a space is created, a home document is automatically created for it.
 
+### Search
+
+```bash
+funcli search [query]
+```
+
+Finds documents and tables by title substring (at least 2 characters), tags, space and update time. Document content is not searched. Provide a query or at least one filter.
+
+**Options:**
+- `--type <type>` - Only `document` or `table` (can be repeated)
+- `--tag <tag>` - Only objects with this tag; all given tags must match (can be repeated)
+- `-s, --space <id>` - Only search in this space
+- `--updated-after <date>` / `--updated-before <date>` - ISO 8601 date or time
+- `-l, --limit <n>` - Results per page, up to 100 (default: 25)
+- `--offset <n>` - Results to skip, for paging
+- `-j, --json` - Output as JSON, including a `mention` snippet per result that links to it from Markdown
+
+**Examples:**
+```bash
+funcli search roadmap
+funcli search roadmap --type document --tag "#status/wip"
+funcli search --updated-after 2026-10-01 --space z2zK66AaEF --json
+```
+
 ### Documents
 
 #### List documents in a space

@@ -256,3 +256,55 @@ test("FundamentoClient createDocument with markdown should use JSON", async () =
   // Restore original post
   client.axios.post = originalPost;
 });
+
+test("FundamentoClient search should send the filters as API parameters", async () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  let capturedUrl, capturedConfig;
+
+  client.axios.get = async (url, requestConfig) => {
+    capturedUrl = url;
+    capturedConfig = requestConfig;
+    return { data: { total: 0, offset: 0, objects: [] } };
+  };
+
+  const result = await client.search({
+    query: "roadmap",
+    types: ["Document"],
+    tags: ["#status/wip"],
+    spaceId: "space123",
+    updatedAfter: "2026-10-01",
+    limit: 10
+  });
+
+  assert.strictEqual(capturedUrl, "/api/v1/search");
+  assert.deepStrictEqual(capturedConfig.params, {
+    query: "roadmap",
+    object_types: ["Document"],
+    tags: ["#status/wip"],
+    space_id: "space123",
+    updated_after: "2026-10-01",
+    updated_before: undefined,
+    limit: 10,
+    offset: undefined
+  });
+  assert.deepStrictEqual(result, { total: 0, offset: 0, objects: [] });
+});
+
+test("FundamentoClient search should leave empty lists out of the request", async () => {
+  const config = new Config({ apiKey: "test-key" });
+  const client = new FundamentoClient(config);
+
+  let capturedConfig;
+
+  client.axios.get = async (url, requestConfig) => {
+    capturedConfig = requestConfig;
+    return { data: {} };
+  };
+
+  await client.search({ query: "roadmap", types: [], tags: [] });
+
+  assert.strictEqual(capturedConfig.params.object_types, undefined);
+  assert.strictEqual(capturedConfig.params.tags, undefined);
+});
