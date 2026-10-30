@@ -87,6 +87,53 @@ describe("documents", () => {
     assert(content.includes("Updated"), "content should be updated");
   });
 
+  it("renames a document and sets its icon without touching its content", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-rename"),
+      icon: "🔥",
+      markdown: "# Kept\n\nContent stays."
+    });
+    assert.deepStrictEqual(created.icon, { type: "emoji", value: "🔥" });
+
+    const title = uniqueName("doc-renamed");
+    const renamed = await client.updateDocument(created.id, { title, icon: "❄️" });
+
+    assert.strictEqual(renamed.title, title);
+    assert.deepStrictEqual(renamed.icon, { type: "emoji", value: "❄️" });
+    const content = await client.getDocument(created.id, "markdown");
+    assert(content.includes("Content stays"), "content should be unchanged");
+  });
+
+  // runCli leaves stdin open, so this also proves a rename doesn't wait on stdin.
+  it("renames a document and removes its icon from the CLI", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("cli-rename"),
+      icon: "🔥",
+      markdown: "# Content"
+    });
+
+    const title = uniqueName("cli-renamed");
+    const { stdout, exitCode } = await runCli("documents", "update", created.id, "--title", title, "--no-icon");
+    assert.strictEqual(exitCode, 0);
+    assert(stdout.includes(title), "should print the new title");
+
+    const doc = await client.getDocument(created.id, "json");
+    assert.strictEqual(doc.title, title);
+    assert.strictEqual(doc.icon, null);
+  });
+
+  it("rejects an icon that isn't a single emoji", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-bad-icon"),
+      markdown: "# Content"
+    });
+
+    await assert.rejects(
+      client.updateDocument(created.id, { icon: "fire" }),
+      /422.*single emoji/
+    );
+  });
+
   it("creates a nested document", async () => {
     const parentTitle = uniqueName("parent");
     const parent = await client.createDocument(testSpaceId, {

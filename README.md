@@ -315,6 +315,7 @@ Creates a new document from a markdown file, Word/OpenOffice file, or stdin. Sup
 **Options:**
 - `-p, --parent <id>` - Parent document ID (for nested documents)
 - `-t, --title <title>` - Document title (overrides frontmatter and filename)
+- `-i, --icon <emoji>` - Document icon, a single emoji (e.g. `--icon 🗺️`)
 
 **Frontmatter Support:**
 
@@ -398,11 +399,18 @@ funcli documents create z2zK66AaEF my-document.md
 funcli documents update <document-id> [file]
 ```
 
-Updates an existing document with new markdown content from a file or stdin. This creates a new version of the document while preserving its history.
+Renames a document, changes its icon, or replaces its content with markdown from a file or stdin. Replacing the content creates a new version of the document while preserving its history; a rename or icon change on its own does not.
 
 **Arguments:**
 - `<document-id>` - ID of the document to update
-- `[file]` - Path to markdown file (optional, reads from stdin if omitted)
+- `[file]` - Path to markdown file, or `-` for stdin. When omitted, stdin is read unless `--title` or `--icon`/`--no-icon` is given.
+
+**Options:**
+- `-t, --title <title>` - New title
+- `-i, --icon <emoji>` - New icon, a single emoji
+- `--no-icon` - Remove the icon
+
+Icons are separate from titles: a title is stored exactly as given, so `--title "🔥 Roadmap"` keeps the emoji in the title. Use `--icon` to set the icon.
 
 **Frontmatter Support:**
 
@@ -434,6 +442,16 @@ cat updated-document.md | funcli documents update abc123
 
 # Update with tags from frontmatter
 funcli documents update abc123 document-with-tags.md
+
+# Rename a document (content is left alone)
+funcli documents update abc123 --title "Project Roadmap"
+
+# Set or remove the icon
+funcli documents update abc123 --icon 🗺️
+funcli documents update abc123 --no-icon
+
+# Rename and replace content from stdin in one go
+cat roadmap.md | funcli documents update abc123 - --title "Project Roadmap"
 ```
 
 **Example with frontmatter:**
@@ -460,7 +478,30 @@ funcli documents update abc123 updated-content.md
 - Creates a new version of the document (preserves history)
 - Updates the document's sync state for real-time collaboration
 - Tags from frontmatter replace existing tags
-- Does not change document title or hierarchy position
+- Does not change the document's hierarchy position
+
+### Tables
+
+#### Rename a table or change its icon
+
+```bash
+funcli tables update <table-id> [options]
+```
+
+**Options:**
+- `-n, --name <name>` - New name (must be unique within the table's space)
+- `-i, --icon <emoji>` - New icon, a single emoji
+- `--no-icon` - Remove the icon
+
+At least one option is required.
+
+**Examples:**
+
+```bash
+funcli tables update xyz789 --name "Q3 Metrics"
+funcli tables update xyz789 --icon 📊
+funcli tables update xyz789 --name "Q3 Metrics" --no-icon
+```
 
 ### Import
 
