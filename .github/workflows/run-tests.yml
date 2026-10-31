@@ -37,6 +37,12 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      # There is no build step, so start the binary the way a user would: it must load every
+      # dependency and print exactly its own version (a dependency that logs on load, or an
+      # argument-parser change, shows up here before it does in the unit tests).
+      - name: Smoke test
+        run: test "$(node bin/funcli.js --version)" = "$(jq -r .version package.json)"
+
       - name: Run tests
         run: npm test
         continue-on-error: true
