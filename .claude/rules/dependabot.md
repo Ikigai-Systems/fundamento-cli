@@ -6,15 +6,12 @@ comments.
 
 ## What CI covers
 
-`Run Tests` runs `npm run lint` and the unit tests (Node 24 and 25); `Integration Tests` start a
-local stack and run `npm run test:integration`; `Changelog` skips bot PRs. There is no build
-step. A green PR is a reasonable signal, but it does not exercise the CLI's `--help` output or
-how it behaves when invoked with unexpected arguments, which is where major bumps of the
-argument parser show up. For those, run the built binary:
-
-```bash
-npm ci && npm run lint && npm test && node bin/funcli.js --version
-```
+`Run Tests` runs lint, a smoke test (`bin/funcli.js --version` must print exactly the package
+version) and the unit tests on Node 24 and 25; `Integration Tests` start a local stack and run
+`npm run test:integration`; `Changelog` skips bot PRs. There is no build step. The smoke test
+catches a dependency that logs on load or an argument-parser change that breaks startup; it does
+not exercise `--help` output or unusual arguments, which is where major bumps of the parser show
+up, so for those also run the binary by hand.
 
 ## Known quirks
 
