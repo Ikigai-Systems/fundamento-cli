@@ -288,7 +288,7 @@ Retrieves document content in Markdown format.
 
 **Options:**
 - `-f, --format <format>` - Output format: `markdown` (default) or `json`
-- `--frontmatter` - Prefix the markdown with a YAML frontmatter block holding the title, tags, icon and color. `create` and `update` read the block back, so the file round-trips.
+- `--frontmatter` - With the markdown format, prefix the output with a YAML frontmatter block holding the title, tags, icon and color. `create` and `update` read the block back, so the file round-trips.
 
 **Example:**
 ```bash
@@ -404,7 +404,7 @@ funcli documents create z2zK66AaEF my-document.md
 funcli documents update <document-id> [file]
 ```
 
-Renames a document, changes its icon or color label, or replaces its content with markdown from a file or stdin. Replacing the content creates a new version of the document while preserving its history; a rename or icon change on its own does not.
+Renames a document, changes its icon or color label, or replaces its content with markdown from a file or stdin. Replacing the content creates a new version of the document while preserving its history; a rename, icon change or color change on its own does not.
 
 **Arguments:**
 - `<document-id>` - ID of the document to update

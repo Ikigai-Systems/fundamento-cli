@@ -179,7 +179,7 @@ documentsCommand
   .command("get <id>")
   .description("Get a document")
   .option("-f, --format <format>", "Output format (markdown|json)", "markdown")
-  .option("--frontmatter", "Prefix the markdown with a YAML frontmatter block (title, tags, icon, color)")
+  .option("--frontmatter", "Prefix the markdown with a YAML frontmatter block (title, tags, icon, color); markdown format only")
   .action(withClient(async (client, id, options) => {
     const document = await client.getDocument(id, options.format, { frontmatter: options.frontmatter });
 
@@ -228,7 +228,7 @@ documentsCommand
       console.log(chalk.green("✓") + " Document created successfully from file!");
       console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`) + withColor(document));
     } else {
-      // Markdown path - frontmatter supplies title, parent and tags
+      // Markdown path - frontmatter supplies title, parent, tags, icon and color
       let content;
       if (file) {
         content = fs.readFileSync(file, "utf8");
@@ -531,7 +531,7 @@ function printDocumentTree(documents, level) {
 
   for (const doc of documents) {
     // Note: nested documents from spaces#show use `npi` as the field name
-    console.log(indent + chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.npi})`));
+    console.log(indent + chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.npi})`) + withColor(doc));
 
     if (doc.children && doc.children.length > 0) {
       printDocumentTree(doc.children, level + 1);

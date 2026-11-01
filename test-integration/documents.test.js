@@ -184,6 +184,14 @@ describe("documents", () => {
     });
     assert.strictEqual(target.color, "crimson");
     assert.deepStrictEqual(target.icon, { type: "emoji", value: "🔥" });
+
+    const other = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-frontmatter-update"),
+      markdown: "# Before"
+    });
+    const updated = await client.updateDocument(other.id, { markdown: exported });
+    assert.strictEqual(updated.color, "crimson");
+    assert.deepStrictEqual(updated.icon, { type: "emoji", value: "🔥" });
   });
 
   it("creates a nested document", async () => {
