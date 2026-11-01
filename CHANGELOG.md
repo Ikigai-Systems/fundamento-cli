@@ -11,6 +11,14 @@
 > during this period, so these sections are dated rather than numbered, and only
 > user-visible changes are listed.
 
+## [0.6.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.5.0...v0.6.0) (2026-11-01)
+
+
+### Features
+
+* **cli:** documents get --frontmatter exports title, icon, color ([b9de11d](https://github.com/Ikigai-Systems/fundamento-cli/commit/b9de11d3e11cb050cf8457648bc9292efa85ee84))
+* set and show color labels from funcli ([#36](https://github.com/Ikigai-Systems/fundamento-cli/issues/36)) ([b9de11d](https://github.com/Ikigai-Systems/fundamento-cli/commit/b9de11d3e11cb050cf8457648bc9292efa85ee84))
+
 ## [0.5.0](https://github.com/Ikigai-Systems/fundamento-cli/compare/v0.4.0...v0.5.0) (2026-10-30)
 
 
