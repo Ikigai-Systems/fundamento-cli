@@ -365,3 +365,66 @@ test("FundamentoClient search should leave empty lists out of the request", asyn
   assert.strictEqual(capturedConfig.params.object_types, undefined);
   assert.strictEqual(capturedConfig.params.tags, undefined);
 });
+
+test("FundamentoClient createDocument sends the color", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedData;
+  client.axios.post = async (url, data) => {
+    capturedData = data;
+    return { data: { id: "doc123" } };
+  };
+
+  await client.createDocument("space123", { title: "Roadmap", color: "teal", markdown: "Plans" });
+
+  assert.deepStrictEqual(capturedData, { document: { title: "Roadmap", color: "teal", markdown: "Plans" } });
+});
+
+test("FundamentoClient updateDocument sends and clears the color", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedData;
+  client.axios.patch = async (url, data) => {
+    capturedData = data;
+    return { data: { id: "doc123" } };
+  };
+
+  await client.updateDocument("doc123", { color: "indigo" });
+  assert.deepStrictEqual(capturedData, { document: { color: "indigo" } });
+
+  await client.updateDocument("doc123", { color: "" });
+  assert.deepStrictEqual(capturedData, { document: { color: "" } });
+});
+
+test("FundamentoClient updateTable sends and clears the color", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedData;
+  client.axios.patch = async (url, data) => {
+    capturedData = data;
+    return { data: { id: "table123" } };
+  };
+
+  await client.updateTable("table123", { color: "lime" });
+  assert.deepStrictEqual(capturedData, { table: { color: "lime" } });
+
+  await client.updateTable("table123", { color: "" });
+  assert.deepStrictEqual(capturedData, { table: { color: "" } });
+});
+
+test("FundamentoClient getDocument asks for frontmatter only when told to, and only for markdown", async () => {
+  const client = new FundamentoClient(new Config({ apiKey: "test-key" }));
+  let capturedUrl, capturedConfig;
+  client.axios.get = async (url, config) => {
+    capturedUrl = url;
+    capturedConfig = config;
+    return { data: "body" };
+  };
+
+  await client.getDocument("doc123");
+  assert.strictEqual(capturedConfig.params, undefined);
+
+  await client.getDocument("doc123", "markdown", { frontmatter: true });
+  assert.strictEqual(capturedUrl, "/api/v1/documents/doc123.markdown");
+  assert.deepStrictEqual(capturedConfig.params, { frontmatter: "true" });
+
+  await client.getDocument("doc123", "json", { frontmatter: true });
+  assert.strictEqual(capturedConfig.params, undefined);
+});

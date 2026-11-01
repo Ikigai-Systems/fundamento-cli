@@ -288,6 +288,7 @@ Retrieves document content in Markdown format.
 
 **Options:**
 - `-f, --format <format>` - Output format: `markdown` (default) or `json`
+- `--frontmatter` - Prefix the markdown with a YAML frontmatter block holding the title, tags, icon and color. `create` and `update` read the block back, so the file round-trips.
 
 **Example:**
 ```bash
@@ -296,6 +297,9 @@ funcli documents get abc123
 
 # JSON format (with metadata)
 funcli documents get abc123 --format json
+
+# Markdown with title, tags, icon and color as frontmatter
+funcli documents get abc123 --frontmatter
 ```
 
 #### Create a new document
@@ -316,6 +320,7 @@ Creates a new document from a markdown file, Word/OpenOffice file, or stdin. Sup
 - `-p, --parent <id>` - Parent document ID (for nested documents)
 - `-t, --title <title>` - Document title (overrides frontmatter and filename)
 - `-i, --icon <emoji>` - Document icon, a single emoji (e.g. `--icon 🗺️`)
+- `--label-color <name>` - Color label: `crimson`, `orange`, `lime`, `teal`, `blue`, `indigo`, `magenta` or `slate`
 
 **Frontmatter Support:**
 
@@ -333,7 +338,7 @@ tags:
 # Document content starts here
 ```
 
-Tags listed in the frontmatter are added to the new document.
+Tags listed in the frontmatter are added to the new document. The keys `fundamento/icon` and `fundamento/color` set the icon and the color label; a value that isn't a single emoji or one of the eight color names is ignored. `--icon` and `--label-color` take precedence.
 
 **Title Resolution Priority:**
 1. CLI option (`--title`)
@@ -399,16 +404,20 @@ funcli documents create z2zK66AaEF my-document.md
 funcli documents update <document-id> [file]
 ```
 
-Renames a document, changes its icon, or replaces its content with markdown from a file or stdin. Replacing the content creates a new version of the document while preserving its history; a rename or icon change on its own does not.
+Renames a document, changes its icon or color label, or replaces its content with markdown from a file or stdin. Replacing the content creates a new version of the document while preserving its history; a rename or icon change on its own does not.
 
 **Arguments:**
 - `<document-id>` - ID of the document to update
-- `[file]` - Path to markdown file, or `-` for stdin. When omitted, stdin is read unless `--title` or `--icon`/`--no-icon` is given.
+- `[file]` - Path to markdown file, or `-` for stdin. When omitted, stdin is read unless `--title`, `--icon`/`--no-icon` or `--label-color`/`--no-label-color` is given.
 
 **Options:**
 - `-t, --title <title>` - New title
 - `-i, --icon <emoji>` - New icon, a single emoji
 - `--no-icon` - Remove the icon
+- `--label-color <name>` - New color label (see the names under `create`)
+- `--no-label-color` - Remove the color label
+
+The option is `--label-color` rather than `--color` because the terminal color libraries treat `--color` and `--no-color` as switches for the CLI's own output.
 
 Icons are separate from titles: a title is stored exactly as given, so `--title "🔥 Roadmap"` keeps the emoji in the title. Use `--icon` to set the icon.
 
@@ -450,6 +459,10 @@ funcli documents update abc123 --title "Project Roadmap"
 funcli documents update abc123 --icon 🗺️
 funcli documents update abc123 --no-icon
 
+# Set or remove the color label
+funcli documents update abc123 --label-color teal
+funcli documents update abc123 --no-label-color
+
 # Rename and replace content from stdin in one go
 cat roadmap.md | funcli documents update abc123 - --title "Project Roadmap"
 ```
@@ -482,7 +495,7 @@ funcli documents update abc123 updated-content.md
 
 ### Tables
 
-#### Rename a table or change its icon
+#### Rename a table or change its icon or color
 
 ```bash
 funcli tables update <table-id> [options]
@@ -492,6 +505,8 @@ funcli tables update <table-id> [options]
 - `-n, --name <name>` - New name (must be unique within the table's space)
 - `-i, --icon <emoji>` - New icon, a single emoji
 - `--no-icon` - Remove the icon
+- `--label-color <name>` - New color label: `crimson`, `orange`, `lime`, `teal`, `blue`, `indigo`, `magenta` or `slate`
+- `--no-label-color` - Remove the color label
 
 At least one option is required.
 
@@ -501,6 +516,7 @@ At least one option is required.
 funcli tables update xyz789 --name "Q3 Metrics"
 funcli tables update xyz789 --icon 📊
 funcli tables update xyz789 --name "Q3 Metrics" --no-icon
+funcli tables update xyz789 --label-color indigo
 ```
 
 ### Import
@@ -559,6 +575,9 @@ funcli import cancel ./my-notes            # cancel and remove the session file
 
 ```bash
 funcli documents get abc123 > document.md
+
+# Keep the title, tags, icon and color too
+funcli documents get abc123 --frontmatter > document.md
 ```
 
 ### Create and import documents

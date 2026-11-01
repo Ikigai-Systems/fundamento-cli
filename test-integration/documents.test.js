@@ -134,6 +134,58 @@ describe("documents", () => {
     );
   });
 
+  it("sets a document's color on create and update, and removes it from the CLI", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-color"),
+      color: "teal",
+      markdown: "# Kept\n\nContent stays."
+    });
+    assert.strictEqual(created.color, "teal");
+
+    const recolored = await client.updateDocument(created.id, { color: "indigo" });
+    assert.strictEqual(recolored.color, "indigo");
+    const content = await client.getDocument(created.id, "markdown");
+    assert(content.includes("Content stays"), "content should be unchanged");
+
+    const { exitCode } = await runCli("documents", "update", created.id, "--no-label-color");
+    assert.strictEqual(exitCode, 0);
+    assert.strictEqual((await client.getDocument(created.id, "json")).color, null);
+  });
+
+  it("rejects a color that isn't one of the eight", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-bad-color"),
+      markdown: "# Content"
+    });
+
+    await assert.rejects(
+      client.updateDocument(created.id, { color: "chartreuse" }),
+      /422/
+    );
+  });
+
+  it("exports color and icon as frontmatter, which update reads back", async () => {
+    const created = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-frontmatter"),
+      icon: "🔥",
+      color: "crimson",
+      markdown: "# Body"
+    });
+
+    const plain = await client.getDocument(created.id, "markdown");
+    assert(!plain.startsWith("---"), "no frontmatter unless asked for");
+
+    const exported = await client.getDocument(created.id, "markdown", { frontmatter: true });
+    assert(exported.includes("fundamento/color: crimson"), "should carry the color");
+
+    const target = await client.createDocument(testSpaceId, {
+      title: uniqueName("doc-frontmatter-copy"),
+      markdown: exported
+    });
+    assert.strictEqual(target.color, "crimson");
+    assert.deepStrictEqual(target.icon, { type: "emoji", value: "🔥" });
+  });
+
   it("creates a nested document", async () => {
     const parentTitle = uniqueName("parent");
     const parent = await client.createDocument(testSpaceId, {
