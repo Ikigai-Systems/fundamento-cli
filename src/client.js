@@ -83,12 +83,16 @@ export class FundamentoClient {
     return response.data;
   }
 
-  async getDocument(id, format = "markdown") {
-    const response = await this.axios.get(`/api/v1/documents/${id}.${format}`);
+  // With frontmatter, the markdown is prefixed with a YAML block holding the title, tags, icon
+  // and color, in the form create and update read back.
+  async getDocument(id, format = "markdown", { frontmatter = false } = {}) {
+    const response = await this.axios.get(`/api/v1/documents/${id}.${format}`, {
+      params: frontmatter && format !== "json" ? { frontmatter: "true" } : undefined
+    });
     return response.data;
   }
 
-  async createDocument(spaceId, { title, icon, markdown, parentDocumentId, file }) {
+  async createDocument(spaceId, { title, icon, color, markdown, parentDocumentId, file }) {
     if (file) {
       // Use multipart form data for file uploads
       const formData = new FormData();
@@ -98,6 +102,9 @@ export class FundamentoClient {
       }
       if (icon) {
         formData.append("document[icon]", icon);
+      }
+      if (color) {
+        formData.append("document[color]", color);
       }
       if (parentDocumentId) {
         formData.append("document[parent_document_id]", parentDocumentId);
@@ -117,6 +124,7 @@ export class FundamentoClient {
         document: withoutUndefined({
           title,
           icon,
+          color,
           markdown,
           parent_document_id: parentDocumentId
         })
@@ -127,19 +135,19 @@ export class FundamentoClient {
     }
   }
 
-  // Any of title, icon and markdown; the ones left undefined stay as they are.
-  // An icon of "" removes it.
-  async updateDocument(id, { title, icon, markdown }) {
+  // Any of title, icon, color and markdown; the ones left undefined stay as they are.
+  // An icon or color of "" removes it.
+  async updateDocument(id, { title, icon, color, markdown }) {
     const response = await this.axios.patch(`/api/v1/documents/${id}`, {
-      document: withoutUndefined({ title, icon, markdown })
+      document: withoutUndefined({ title, icon, color, markdown })
     });
     return response.data;
   }
 
-  // Either or both of name and icon; an icon of "" removes it.
-  async updateTable(id, { name, icon }) {
+  // Any of name, icon and color; an icon or color of "" removes it.
+  async updateTable(id, { name, icon, color }) {
     const response = await this.axios.patch(`/api/v1/tables/${id}`, {
-      table: withoutUndefined({ name, icon })
+      table: withoutUndefined({ name, icon, color })
     });
     return response.data;
   }

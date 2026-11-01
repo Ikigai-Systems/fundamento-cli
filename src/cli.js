@@ -168,7 +168,7 @@ documentsCommand
       console.log(chalk.bold("\nDocuments:\n"));
 
       for (const doc of documents) {
-        console.log(chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.id})`));
+        console.log(chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.id})`) + withColor(doc));
       }
 
       console.log();
@@ -179,8 +179,9 @@ documentsCommand
   .command("get <id>")
   .description("Get a document")
   .option("-f, --format <format>", "Output format (markdown|json)", "markdown")
+  .option("--frontmatter", "Prefix the markdown with a YAML frontmatter block (title, tags, icon, color); markdown format only")
   .action(withClient(async (client, id, options) => {
-    const document = await client.getDocument(id, options.format);
+    const document = await client.getDocument(id, options.format, { frontmatter: options.frontmatter });
 
     if (options.format === "json") {
       console.log(JSON.stringify(document, null, 2));
@@ -196,6 +197,7 @@ documentsCommand
   .option("-p, --parent <id>", "Parent document ID (for nested documents)")
   .option("-t, --title <title>", "Document title (overrides frontmatter)")
   .option("-i, --icon <emoji>", "Document icon, a single emoji")
+  .option("--label-color <name>", "Color label: crimson, orange, lime, teal, blue, indigo, magenta or slate")
   .action(withClient(async (client, spaceId, file, options) => {
     // Determine if this is a file upload (Word/OpenOffice) or markdown content
     const fileUploadExtensions = [".docx", ".doc", ".odt", ".rtf", ".txt"];
@@ -218,14 +220,15 @@ documentsCommand
       const document = await client.createDocument(spaceId, {
         title,
         icon: options.icon,
+        color: options.labelColor,
         parentDocumentId: options.parent,
         file
       });
 
       console.log(chalk.green("✓") + " Document created successfully from file!");
-      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
+      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`) + withColor(document));
     } else {
-      // Markdown path - frontmatter supplies title, parent and tags
+      // Markdown path - frontmatter supplies title, parent, tags, icon and color
       let content;
       if (file) {
         content = fs.readFileSync(file, "utf8");
@@ -240,42 +243,47 @@ documentsCommand
           parent: options.parent,
           file
         }),
-        icon: options.icon
+        icon: options.icon,
+        color: options.labelColor
       });
 
       console.log(chalk.green("✓") + " Document created successfully!");
-      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
+      console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`) + withColor(document));
     }
   }));
 
 documentsCommand
   .command("update <id>")
-  .description("Rename a document, change its icon, or replace its content from a markdown file or stdin")
-  .argument("[file]", "Markdown file, or - for stdin (stdin is read by default when no --title or --icon is given)")
+  .description("Rename a document, change its icon or color, or replace its content from a markdown file or stdin")
+  .argument("[file]", "Markdown file, or - for stdin (stdin is read by default when no --title, --icon or --label-color is given)")
   .option("-t, --title <title>", "New document title")
   .option("-i, --icon <emoji>", "New document icon, a single emoji")
   .option("--no-icon", "Remove the document's icon")
+  .option("--label-color <name>", "New color label: crimson, orange, lime, teal, blue, indigo, magenta or slate")
+  .option("--no-label-color", "Remove the document's color label")
   .action(withClient(async (client, id, file, options) => {
     const title = options.title;
     const icon = iconOption(options);
+    const color = colorOption(options);
 
     // Content comes from the file or stdin. A bare rename or icon change must not sit
     // waiting on stdin, so stdin is then only read when asked for with "-".
     let content;
     if (file && file !== "-") {
       content = fs.readFileSync(file, "utf8");
-    } else if (file === "-" || (title === undefined && icon === undefined)) {
+    } else if (file === "-" || (title === undefined && icon === undefined && color === undefined)) {
       content = await readStdin();
     }
 
     const document = await client.updateDocument(id, {
       title,
       icon,
+      color,
       markdown: content
     });
 
     console.log(chalk.green("✓") + " Document updated successfully!");
-    console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`));
+    console.log(chalk.bold(withIcon(document, document.title)) + chalk.gray(` (${document.id})`) + withColor(document));
   }));
 
 const tablesCommand = program
@@ -284,23 +292,26 @@ const tablesCommand = program
 
 tablesCommand
   .command("update <id>")
-  .description("Rename a table or change its icon")
+  .description("Rename a table or change its icon or color")
   .option("-n, --name <name>", "New table name (must be unique within the space)")
   .option("-i, --icon <emoji>", "New table icon, a single emoji")
   .option("--no-icon", "Remove the table's icon")
+  .option("--label-color <name>", "New color label: crimson, orange, lime, teal, blue, indigo, magenta or slate")
+  .option("--no-label-color", "Remove the table's color label")
   .action(withClient(async (client, id, options) => {
     const name = options.name;
     const icon = iconOption(options);
+    const color = colorOption(options);
 
-    if (name === undefined && icon === undefined) {
-      console.error(chalk.red("Error:"), "Provide --name, --icon or --no-icon");
+    if (name === undefined && icon === undefined && color === undefined) {
+      console.error(chalk.red("Error:"), "Provide --name, --icon, --no-icon, --label-color or --no-label-color");
       process.exit(1);
     }
 
-    const table = await client.updateTable(id, { name, icon });
+    const table = await client.updateTable(id, { name, icon, color });
 
     console.log(chalk.green("✓") + " Table updated successfully!");
-    console.log(chalk.bold(withIcon(table, table.name)) + chalk.gray(` (${table.id})`));
+    console.log(chalk.bold(withIcon(table, table.name)) + chalk.gray(` (${table.id})`) + withColor(table));
   }));
 
 const formulasCommand = program
@@ -458,6 +469,20 @@ function iconOption(options) {
   return options.icon;
 }
 
+// Same shape for the color label. The option is --label-color rather than --color because
+// chalk reads --color and --no-color from the command line to force or disable terminal
+// colors, which would change the output instead of the document.
+function colorOption(options) {
+  if (options.labelColor === false) return "";
+  return options.labelColor;
+}
+
+// The color is a name; show it after the id rather than painting the title, since terminals
+// have no underline color to match the app.
+function withColor(item) {
+  return item.color ? chalk.gray(` · ${item.color}`) : "";
+}
+
 // The API returns the icon separately from the title, as { type, value }.
 function withIcon(item, label) {
   return item.icon?.value ? `${item.icon.value} ${label}` : label;
@@ -506,7 +531,7 @@ function printDocumentTree(documents, level) {
 
   for (const doc of documents) {
     // Note: nested documents from spaces#show use `npi` as the field name
-    console.log(indent + chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.npi})`));
+    console.log(indent + chalk.cyan(withIcon(doc, doc.title)) + chalk.gray(` (${doc.npi})`) + withColor(doc));
 
     if (doc.children && doc.children.length > 0) {
       printDocumentTree(doc.children, level + 1);
